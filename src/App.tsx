@@ -1,26 +1,65 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { ProductPage } from './pages/ProductPage/ProductPage';
+import { ProductDetailPage } from './pages/ProductDetailPage/ProductDetailPage';
+import { CheckoutPage } from './pages/CheckoutPage/CheckoutPage';
+import { SummaryPage } from './pages/SummaryPage/SummaryPage';
+import { StatusPage } from './pages/StatusPage/StatusPage';
+import { TermsPage } from './pages/TermsPage/TermsPage';
+import { TrackPage } from './pages/TrackPage/TrackPage';
+import { useSessionRestore } from './hooks/useSessionRestore';
 
-function App() {
+/**
+ * Inner component that uses hooks requiring Router context.
+ */
+const AppRoutes: React.FC = () => {
+  // Restore user to the correct step on refresh safely
+  useSessionRestore();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      {/* Step 1: Catalog & Product Detail (slug-based URL) */}
+      <Route path="/" element={<ProductPage />} />
+      <Route path="/product/:slug" element={<ProductDetailPage />} />
+
+      {/* Step 2: Delivery & Customer Info */}
+      <Route path="/checkout" element={<CheckoutPage />} />
+
+      {/* Step 3: Order Summary & Payment Card Info */}
+      <Route path="/summary" element={<SummaryPage />} />
+
+      {/* Step 4: Final Payment Status */}
+      <Route path="/status" element={<StatusPage />} />
+
+      {/* Guest Order Tracking (Sin login) */}
+      <Route path="/orders/track/:orderNumber" element={<TrackPage />} />
+      <Route path="/track/:orderNumber" element={<TrackPage />} />
+
+      {/* Legal & Terms and Conditions */}
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/terminos" element={<Navigate to="/terms" replace />} />
+      <Route path="/terminos-y-condiciones" element={<Navigate to="/terms" replace />} />
+
+      {/* Catch-all redirect to Step 1 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
-}
+};
+
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+      <Toaster
+        richColors
+        position="top-right"
+        closeButton
+        duration={3500}
+        theme="light"
+      />
+    </BrowserRouter>
+  );
+};
 
 export default App;
