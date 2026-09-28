@@ -466,7 +466,7 @@ export const CheckoutPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="name"
-                      className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+                      className="block text-xs font-medium text-gray-700 mb-1.5"
                     >
                       Nombre completo *
                     </label>
@@ -484,7 +484,7 @@ export const CheckoutPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="email"
-                      className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+                      className="block text-xs font-medium text-gray-700 mb-1.5"
                     >
                       Correo electrónico *
                     </label>
@@ -600,7 +600,7 @@ export const CheckoutPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="address"
-                      className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+                      className="block text-xs font-medium text-gray-700 mb-1.5"
                     >
                       Dirección principal *
                     </label>
@@ -632,7 +632,7 @@ export const CheckoutPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="complement"
-                      className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+                      className="block text-xs font-medium text-gray-700 mb-1.5"
                     >
                       Complemento (opcional)
                     </label>
@@ -652,7 +652,7 @@ export const CheckoutPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="neighborhood"
-                      className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+                      className="block text-xs font-medium text-gray-700 mb-1.5"
                     >
                       Barrio o sector *
                     </label>
@@ -672,7 +672,7 @@ export const CheckoutPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="notes"
-                      className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+                      className="block text-xs font-medium text-gray-700 mb-1.5"
                     >
                       Instrucciones especiales para el repartidor (opcional)
                     </label>
@@ -691,7 +691,7 @@ export const CheckoutPage: React.FC = () => {
             {/* Right Column: Order Summary & Action (order-1 on mobile, order-2 on desktop) */}
             <div className="order-1 lg:order-2 lg:col-span-5 space-y-4">
               <div className="card p-3.5 sm:p-5 sticky top-24">
-                <h2 className="text-sm font-bold text-gray-900 pb-3 mb-3 border-b border-gray-100 flex items-center justify-between uppercase tracking-wider">
+                <h2 className="text-sm font-bold text-gray-900 pb-3 mb-3 border-b border-gray-100 flex items-center justify-between">
                   <span>Resumen de tu orden</span>
                   <span className="text-xs text-gray-500 font-normal lowercase">
                     {cartItems.reduce((acc, i) => acc + i.quantity, 0)} productos

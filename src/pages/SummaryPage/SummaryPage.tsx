@@ -149,7 +149,7 @@ export const SummaryPage: React.FC = () => {
             <div className="card p-4 sm:p-6">
               <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-gray-100">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                  <h2 className="text-sm font-bold text-gray-900">
                     Artículos en el pedido
                   </h2>
                   <span className="text-xs text-gray-400 font-normal">
@@ -206,7 +206,7 @@ export const SummaryPage: React.FC = () => {
             {cardInfo && (
               <div className="card p-4 sm:p-5">
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
-                  <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                  <h2 className="text-sm font-bold text-gray-900">
                     Método de Pago
                   </h2>
                   <button
@@ -290,7 +290,7 @@ export const SummaryPage: React.FC = () => {
             {/* Buyer Contact & Structured Delivery Address with "Editar" button */}
             <div className="card p-4 sm:p-5">
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                <h2 className="text-sm font-bold text-gray-900">
                   Datos de Entrega
                 </h2>
                 <button
@@ -308,7 +308,7 @@ export const SummaryPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5">
+                  <span className="text-gray-400 block text-xs font-medium mb-0.5">
                     Destinatario
                   </span>
                   <p className="font-semibold text-gray-900 text-xs sm:text-sm">{currentOrder.customerName}</p>
@@ -323,7 +323,7 @@ export const SummaryPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5">
+                  <span className="text-gray-400 block text-xs font-medium mb-0.5">
                     Dirección
                   </span>
                   <p className="font-semibold text-gray-900 text-xs sm:text-sm">{currentOrder.deliveryAddress}</p>
@@ -371,7 +371,7 @@ export const SummaryPage: React.FC = () => {
           {/* Column 2: Financial Breakdown and Desktop Action (lg:col-span-5) */}
           <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
             <div className="card p-4 sm:p-6 shadow-sm border border-gray-100">
-              <h2 className="text-sm font-bold text-gray-900 pb-3 mb-3 border-b border-gray-100 uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-gray-900 pb-3 mb-3 border-b border-gray-100">
                 Resumen de Pago
               </h2>
 

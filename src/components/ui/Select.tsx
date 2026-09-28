@@ -74,7 +74,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       {label && (
         <label
           htmlFor={id}
-          className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5"
+          className="block text-xs font-medium text-gray-700 mb-1.5"
         >
           {label}
         </label>

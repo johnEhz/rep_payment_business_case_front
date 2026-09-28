@@ -441,7 +441,7 @@ export const ProductDetailPage: React.FC = () => {
 
               {/* Description */}
               <div className="border-t border-b border-gray-100 py-3 sm:py-4 mb-4">
-                <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-1.5">
+                <h2 className="text-xs font-bold text-gray-900 mb-1.5">
                   Descripción
                 </h2>
                 <p className="text-gray-600 text-xs sm:text-sm leading-relaxed whitespace-pre-line">
@@ -453,7 +453,7 @@ export const ProductDetailPage: React.FC = () => {
               {!isOutOfStock && (
                 <div className="mb-4 sm:mb-5">
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    <label className="block text-xs font-medium text-gray-700">
                       Cantidad a comprar
                     </label>
                     {cartQty > 0 && (

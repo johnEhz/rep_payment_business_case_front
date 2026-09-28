@@ -98,7 +98,7 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
       <div className="space-y-6">
         {/* 1. Envío & Despacho */}
         <div className="pb-5 border-b border-gray-100">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-3">
+          <h3 className="text-xs font-semibold text-gray-900 mb-2.5">
             Envío y Despacho
           </h3>
           <div className="space-y-2">
@@ -119,7 +119,7 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
 
         {/* 2. Disponibilidad de Inventario */}
         <div className="pb-5 border-b border-gray-100">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-3">
+          <h3 className="text-xs font-semibold text-gray-900 mb-2.5">
             Disponibilidad
           </h3>
           <label className="flex items-center gap-2.5 cursor-pointer text-xs text-gray-700 hover:text-blue-600 select-none">
@@ -137,7 +137,7 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
 
         {/* 3. Categorías */}
         <div className="pb-5 border-b border-gray-100">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-3">
+          <h3 className="text-xs font-semibold text-gray-900 mb-2.5">
             Categoría
           </h3>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -180,7 +180,7 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
         {/* 4. Marcas (Checkboxes estilo Amazon) */}
         {brands.length > 0 && (
           <div className="pb-5 border-b border-gray-100">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-3">
+            <h3 className="text-xs font-semibold text-gray-900 mb-2.5">
               Marcas
             </h3>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -223,7 +223,7 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
 
         {/* 5. Rango de Precios */}
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-3">
+          <h3 className="text-xs font-semibold text-gray-900 mb-2.5">
             Precio
           </h3>
 

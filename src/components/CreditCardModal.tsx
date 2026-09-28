@@ -145,18 +145,23 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                 ?
               </button>
               {showInfoTooltip && (
-                <div className="absolute left-0 top-6.5 z-30 w-60 p-2.5 bg-gray-900/95 backdrop-blur-xs text-white text-[11px] rounded-xl shadow-xl leading-snug animate-in fade-in zoom-in-95">
-                  <div className="flex items-start justify-between gap-1 mb-1">
-                    <span className="font-bold text-gray-200">Seguridad SSL</span>
+                <div className="absolute left-0 top-7 z-30 w-64 p-3 bg-white/95 backdrop-blur-md border border-gray-200/90 text-gray-600 text-xs rounded-2xl shadow-xl leading-relaxed animate-in fade-in zoom-in-95">
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <span className="font-semibold text-gray-800 text-xs flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                      Transacción protegida
+                    </span>
                     <button
                       type="button"
                       onClick={() => setShowInfoTooltip(false)}
-                      className="text-gray-400 hover:text-white text-xs ml-1"
+                      className="text-gray-400 hover:text-gray-600 p-0.5 rounded-full"
                     >
                       ✕
                     </button>
                   </div>
-                  Tus datos son procesados directamente con cifrado de 256 bits (PCI-DSS). No almacenamos tu código de seguridad.
+                  Tus datos son procesados directamente con cifrado bancario de 256 bits. No almacenamos tu código de seguridad.
                 </div>
               )}
             </div>
@@ -280,7 +285,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
               <div className="flex items-center justify-between mb-1">
                 <label
                   htmlFor="modalCardNumber"
-                  className="block text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                  className="block text-xs font-medium text-gray-700"
                 >
                   Número de tarjeta *
                 </label>
@@ -354,7 +359,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
             <div>
               <label
                 htmlFor="modalCardHolder"
-                className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1"
+                className="block text-xs font-medium text-gray-700 mb-1"
               >
                 Nombre del titular *
               </label>
@@ -380,7 +385,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
               <div>
                 <label
                   htmlFor="modalExpiry"
-                  className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5 h-5 flex items-center truncate"
+                  className="block text-xs font-medium text-gray-700 mb-1.5 h-5 flex items-center truncate"
                   title="Fecha de vencimiento (MM/AA)"
                 >
                   Vencimiento *
@@ -410,7 +415,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
               <div>
                 <label
                   htmlFor="modalCvc"
-                  className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5 h-5 flex items-center truncate"
+                  className="block text-xs font-medium text-gray-700 mb-1.5 h-5 flex items-center truncate"
                   title="Código de seguridad (CVC / CVV)"
                 >
                   CVC / CVV *
@@ -440,7 +445,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
             <div>
               <label
                 htmlFor="modalInstallments"
-                className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1"
+                className="block text-xs font-medium text-gray-700 mb-1"
               >
                 Número de cuotas
               </label>
