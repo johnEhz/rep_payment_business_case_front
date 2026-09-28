@@ -12,6 +12,7 @@ import { SummaryPageSkeleton } from '../../components/skeletons/CheckoutSkeleton
 import { formatCOP } from '../../utils/currency';
 import { tokenizeCard } from '../../utils/gateway';
 import { detectCardBrand } from '../../utils/validators';
+import { PaymentCardVisual } from '../../components/PaymentCardVisual';
 
 export const SummaryPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -121,7 +122,6 @@ export const SummaryPage: React.FC = () => {
   }
 
   const isProcessing = tokenizing || paying;
-  const last4 = cardInfo?.number ? cardInfo.number.slice(-4) : '••••';
   const cardBrand = cardInfo?.number ? detectCardBrand(cardInfo.number) : 'unknown';
 
   return (
@@ -221,68 +221,15 @@ export const SummaryPage: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Harmonized Indigo/Violet Card Preview */}
-                <div
-                  className={`relative rounded-2xl p-4 sm:p-5 text-white overflow-hidden shadow-xl border transition-all ${
-                    cardBrand === 'mastercard'
-                      ? 'bg-gradient-to-br from-indigo-700 via-purple-800 to-rose-900 border-purple-400/30 shadow-purple-900/25'
-                      : cardBrand === 'visa'
-                      ? 'bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-900 border-indigo-400/30 shadow-indigo-900/25'
-                      : 'bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-950 border-indigo-400/25 shadow-indigo-950/25'
-                  }`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.08] via-transparent to-white/[0.12] pointer-events-none rounded-2xl" />
-
-                  {/* Top: Wallet & Cardholder */}
-                  <div className="flex items-start justify-between relative z-10">
-                    <div>
-                      <span className="text-[10px] font-semibold text-white/50 tracking-wider block">
-                        Wallet
-                      </span>
-                      <p className="text-sm sm:text-base font-medium text-white/95 truncate max-w-[200px]">
-                        {cardInfo.cardHolder}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white/90 bg-white/10 px-2.5 py-0.5 rounded-full text-[10px] border border-white/10">
-                        {cardInfo.installments} {cardInfo.installments === 1 ? 'cuota' : 'cuotas'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Bottom: Number & Logo */}
-                  <div className="flex items-end justify-between relative z-10 pt-4">
-                    <div>
-                      <p className="font-mono text-sm sm:text-base font-bold tracking-widest text-white">
-                        •••• •••• •••• {last4}
-                      </p>
-                      <p className="text-[10px] font-mono text-white/50 mt-0.5">
-                        Account ** {last4}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      {cardBrand === 'mastercard' && (
-                        <div className="flex items-center -space-x-1.5">
-                          <div className="w-5 h-5 rounded-full bg-[#EB001B]" />
-                          <div className="w-5 h-5 rounded-full bg-[#F79E1B] opacity-90" />
-                        </div>
-                      )}
-                      {cardBrand === 'visa' && (
-                        <span className="text-base font-black italic tracking-widest text-white">
-                          VISA
-                        </span>
-                      )}
-                      {cardBrand === 'unknown' && (
-                        <span className="text-[10px] font-mono text-white/40">TARJETA</span>
-                      )}
-                      <span className="font-mono text-[9px] text-white/50 tracking-wider">
-                        **** {last4}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                {/* Reusable Physical Payment Card Visual */}
+                <PaymentCardVisual
+                  cardNumber={cardInfo.number}
+                  cardHolder={cardInfo.cardHolder}
+                  expMonth={cardInfo.expMonth}
+                  expYear={cardInfo.expYear}
+                  installments={cardInfo.installments}
+                  brand={cardBrand}
+                />
               </div>
             )}
 
