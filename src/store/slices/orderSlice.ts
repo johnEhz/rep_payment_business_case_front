@@ -145,6 +145,13 @@ const orderSlice = createSlice({
       .addCase(payOrder.pending, (state) => {
         state.paying = true;
         state.payError = null;
+        if (state.paymentResult) {
+          state.paymentResult = {
+            ...state.paymentResult,
+            status: 'PENDING',
+            message: 'Aplicando tu pago... Validando con la pasarela de pagos.',
+          };
+        }
       })
       .addCase(payOrder.fulfilled, (state, action) => {
         state.paying = false;
@@ -169,6 +176,13 @@ const orderSlice = createSlice({
       .addCase(payOrder.rejected, (state, action) => {
         state.paying = false;
         state.payError = action.payload as string;
+        if (state.paymentResult) {
+          state.paymentResult = {
+            ...state.paymentResult,
+            status: 'DECLINED',
+            message: (action.payload as string) || 'No fue posible autorizar la transacción.',
+          };
+        }
       });
 
     // Track order

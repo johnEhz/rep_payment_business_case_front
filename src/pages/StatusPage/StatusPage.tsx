@@ -17,7 +17,7 @@ import { PaymentStatusResponse } from '../../types';
 export const StatusPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { paymentResult, currentOrder } = useAppSelector((s) => s.order);
+  const { paymentResult, currentOrder, paying } = useAppSelector((s) => s.order);
   const { merchantData } = useAppSelector((s) => s.checkout);
 
   // Estado del backend en tiempo real (fuente única de verdad)
@@ -48,19 +48,21 @@ export const StatusPage: React.FC = () => {
     paymentResult?.transaction ||
     order?.transaction;
 
-  // Estado pendiente / indeterminado
-  const isPending =
-    !isSuccess &&
-    (liveStatus
-      ? liveStatus.isPaymentPending || liveStatus.activeTransaction?.status === 'PENDING'
-      : paymentResult?.status === 'PENDING' ||
-        paymentResult?.transaction?.status === 'PENDING' ||
-        order?.status === 'PAYMENT_PENDING' ||
-        order?.status === 'CREATED');
-
   // Estado para modal de reintento de pago
   const [isRetryModalOpen, setIsRetryModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+
+  // Estado pendiente / indeterminado (reutiliza la pantalla oficial de procesamiento)
+  const isPending =
+    !isSuccess &&
+    (isRetrying ||
+      paying ||
+      (liveStatus
+        ? liveStatus.isPaymentPending || liveStatus.activeTransaction?.status === 'PENDING'
+        : paymentResult?.status === 'PENDING' ||
+          paymentResult?.transaction?.status === 'PENDING' ||
+          order?.status === 'PAYMENT_PENDING' ||
+          order?.status === 'CREATED'));
 
   // Polling cada 2.5 segundos mientras el pago esté PENDING
   useEffect(() => {
@@ -209,7 +211,14 @@ export const StatusPage: React.FC = () => {
       return;
     }
 
+    setLiveStatus(null);
     setIsRetrying(true);
+    setIsRetryModalOpen(false);
+    toast.loading('Aplicando tu pago... Estamos validando la transacción con la entidad financiera.', {
+      id: 'retry-payment-toast',
+      duration: 20000,
+    });
+
     try {
       // 1. Tokenizar la nueva tarjeta directamente contra la API de la pasarela
       const cardToken = await tokenizeCard(
@@ -236,26 +245,26 @@ export const StatusPage: React.FC = () => {
         })
       );
 
+      toast.dismiss('retry-payment-toast');
+
       if (payOrder.fulfilled.match(payResult)) {
         if (payResult.payload?.status === 'APPROVED' || payResult.payload?.success) {
           toast.success('¡Pago aprobado exitosamente! Generando factura...');
-          setIsRetryModalOpen(false);
         } else if (payResult.payload?.status === 'PENDING') {
           toast.info('Tu pago está siendo procesado por la entidad financiera...', {
             description: 'Consultando la confirmación de la pasarela...',
           });
-          setIsRetryModalOpen(false);
         } else {
           toast.error('El pago no fue aprobado', {
             description: payResult.payload?.message || 'Por favor revisa los fondos o intenta con otra tarjeta.',
           });
-          setIsRetryModalOpen(false);
         }
       } else {
         const errorMsg = (payResult.payload as string) || 'Ocurrió un error al procesar el reintento de pago';
         toast.error('Error al procesar el pago', { description: errorMsg });
       }
     } catch (err: any) {
+      toast.dismiss('retry-payment-toast');
       toast.error('Error con la tarjeta', {
         description: err.message || 'No fue posible validar la tarjeta con la pasarela de pagos',
       });
