@@ -110,7 +110,6 @@ export const CheckoutPage: React.FC = () => {
     },
   });
 
-  const watchedName = watch('name');
   const watchedCity = watch('city');
   const watchedDepartment = watch('department');
   const watchedCountry = watch('country');
@@ -941,7 +940,6 @@ export const CheckoutPage: React.FC = () => {
           onSubmit={handleCompleteOrderWithCard}
           isSubmitting={creating}
           merchantPermalink={merchantData?.permalink}
-          defaultCardHolder={watchedName || validatedDeliveryData?.name || customerInfo?.name}
         />
 
         {/* Modal for Mapbox Interactive Map Location Selection */}

@@ -15,19 +15,7 @@ interface CreditCardModalProps {
   onSubmit: (cardData: CreditCardModalFormValues) => Promise<void> | void;
   isSubmitting: boolean;
   merchantPermalink?: string;
-  defaultCardHolder?: string;
 }
-
-// Normaliza el nombre del titular a formato título (Title Case)
-const normalizeName = (name?: string): string => {
-  if (!name || !name.trim()) return '';
-  return name
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
 
 export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   isOpen,
@@ -35,7 +23,6 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   onSubmit,
   isSubmitting,
   merchantPermalink,
-  defaultCardHolder = '',
 }) => {
   const {
     register,
@@ -49,7 +36,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
     mode: 'onChange',
     defaultValues: {
       cardNumber: '',
-      cardHolder: defaultCardHolder ? normalizeName(defaultCardHolder) : '',
+      cardHolder: '',
       expMonth: '',
       expYear: '',
       cvc: '',
@@ -71,8 +58,6 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   const cardNumber = watch('cardNumber') || '';
   const cardHolder = watch('cardHolder') || '';
   const brand: CardBrand = detectCardBrand(cardNumber);
-  const cleanDigits = cardNumber.replace(/\D/g, '');
-  const last4 = cleanDigits.slice(-4);
 
   // Close on Escape
   useEffect(() => {
@@ -85,18 +70,14 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isSubmitting, onClose]);
 
-  // Reset form and pre-fill cardHolder when modal opens/closes
+  // Reset form when modal closes
   useEffect(() => {
-    if (isOpen) {
-      if (defaultCardHolder && !watch('cardHolder')) {
-        setValue('cardHolder', normalizeName(defaultCardHolder), { shouldValidate: true });
-      }
-    } else {
+    if (!isOpen) {
       reset();
       setExpiryDisplay('');
       setShowInfoTooltip(false);
     }
-  }, [isOpen, defaultCardHolder, reset, setValue, watch]);
+  }, [isOpen, reset]);
 
   if (!isOpen) return null;
 
@@ -218,50 +199,84 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                 }`}
               />
 
-              {/* Top row: 'Wallet' label + Cardholder Name on left, '+' minimal button on right */}
+              {/* Top row: Realistic Metallic EMV Chip + Contactless waves on left, 'Wallet' on right */}
               <div className="flex items-start justify-between z-10">
+                <div className="flex items-center gap-3">
+                  {/* Metallic EMV Chip with realistic circuit traces */}
+                  <div className="w-10 h-7 sm:w-11 sm:h-8 rounded-md bg-gradient-to-br from-amber-100 via-amber-300 to-yellow-600 p-[1.5px] shadow-sm border border-amber-200/60 relative overflow-hidden shrink-0">
+                    <div className="w-full h-full border border-amber-800/30 rounded-[3px] grid grid-cols-3 grid-rows-2 gap-[1px]">
+                      <div className="border-r border-b border-amber-800/30" />
+                      <div className="border-b border-amber-800/30" />
+                      <div className="border-l border-b border-amber-800/30" />
+                      <div className="border-r border-t border-amber-800/30" />
+                      <div className="border-t border-amber-800/30" />
+                      <div className="border-l border-t border-amber-800/30" />
+                    </div>
+                    {/* Metallic reflective sheen */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/35 via-transparent to-white/20 pointer-events-none" />
+                  </div>
+
+                  {/* Contactless waves symbol */}
+                  <svg
+                    className="w-4 h-4 text-white/70 rotate-90"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <path d="M8.5 16.5a5 5 0 0 1 7 0" />
+                    <path d="M6 14a8.5 8.5 0 0 1 12 0" />
+                    <path d="M3.5 11.5a12 12 0 0 1 17 0" />
+                  </svg>
+                </div>
+
+                <span className="text-[10px] sm:text-xs font-semibold text-white/60 tracking-wider">
+                  Wallet
+                </span>
+              </div>
+
+              {/* Middle row: Formatted number */}
+              <div
+                className={`py-1 z-10 transition-all duration-200 ${
+                  focusedField === 'number' ? 'scale-[1.02] transform' : ''
+                }`}
+              >
+                <p className="font-mono text-base xs:text-lg sm:text-xl font-bold tracking-[0.14em] sm:tracking-[0.18em] text-white drop-shadow-sm select-none">
+                  {displayCardNumber()}
+                </p>
+              </div>
+
+              {/* Bottom row: Cardholder Name (ALL UPPERCASE), Expiry, and Brand Logo */}
+              <div className="flex items-end justify-between z-10">
                 <div
-                  className={`transition-all duration-200 ${
+                  className={`transition-all duration-200 min-w-0 pr-2 ${
                     focusedField === 'holder' ? 'scale-[1.02] transform' : ''
                   }`}
                 >
-                  <span className="text-[11px] sm:text-xs font-semibold text-white/60 tracking-wider block">
-                    Wallet
+                  <span className="text-[9px] sm:text-[10px] uppercase text-white/50 tracking-wider block font-semibold">
+                    Titular
                   </span>
-                  <p className="text-base sm:text-lg font-medium text-white/95 tracking-tight truncate max-w-[240px] sm:max-w-[300px] mt-0.5">
-                    {normalizeName(cardHolder || defaultCardHolder) || 'Titular de la tarjeta'}
+                  <p className="text-xs sm:text-sm font-semibold tracking-wider text-white/95 truncate max-w-[170px] xs:max-w-[210px] sm:max-w-[260px] uppercase font-mono">
+                    {cardHolder ? cardHolder.toUpperCase() : 'TITULAR DE LA TARJETA'}
                   </p>
                 </div>
 
-                {/* Minimalist Plus action button from reference */}
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white/80 transition-all shrink-0">
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                </div>
-              </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div
+                    className={`text-right transition-all duration-200 ${
+                      focusedField === 'expiry' ? 'scale-[1.02] transform' : ''
+                    }`}
+                  >
+                    <span className="text-[9px] sm:text-[10px] uppercase text-white/50 tracking-wider block font-semibold">
+                      Vence
+                    </span>
+                    <p className="text-xs sm:text-sm font-semibold tracking-wider text-white/95 font-mono">
+                      {expiryDisplay || 'MM/AA'}
+                    </p>
+                  </div>
 
-              {/* Bottom row: Formatted number on left, Brand Logo + Last4 on right */}
-              <div className="flex items-end justify-between z-10 pt-2">
-                <div
-                  className={`space-y-1 transition-all duration-200 ${
-                    focusedField === 'number' || focusedField === 'expiry' ? 'scale-[1.02] transform' : ''
-                  }`}
-                >
-                  {/* Card Number display */}
-                  <p className="font-mono text-base sm:text-xl font-bold tracking-[0.14em] sm:tracking-[0.18em] text-white drop-shadow-sm select-none">
-                    {displayCardNumber()}
-                  </p>
-
-                  {/* Clean Account Info matching reference */}
-                  <p className="text-[11px] sm:text-xs text-white/50 font-mono">
-                    Account ** {last4 || '5087'}
-                  </p>
-                </div>
-
-                {/* Right: Dynamic Brand Logo & Masked Digits (Exactly like photo) */}
-                <div className="flex flex-col items-end shrink-0 gap-1">
+                  {/* Right: Dynamic Brand Logo */}
                   <div key={brand} className="animate-brand-pop flex items-center">
                     {brand === 'mastercard' && (
                       <div className="flex items-center -space-x-2">
@@ -284,10 +299,6 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                       </div>
                     )}
                   </div>
-
-                  <span className="font-mono text-[10px] sm:text-xs text-white/50 tracking-wider">
-                    **** {last4 || '3264'}
-                  </span>
                 </div>
               </div>
             </div>
@@ -381,8 +392,13 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                 autoComplete="cc-name"
                 placeholder="Nombre como aparece en la tarjeta"
                 minLength={5}
-                className={`input-field capitalize placeholder:normal-case font-medium ${errors.cardHolder ? 'error' : ''}`}
-                {...register('cardHolder')}
+                className={`input-field uppercase placeholder:normal-case font-medium ${errors.cardHolder ? 'error' : ''}`}
+                {...register('cardHolder', {
+                  onChange: (e) => {
+                    const upper = (e.target.value || '').toUpperCase();
+                    setValue('cardHolder', upper, { shouldValidate: true });
+                  },
+                })}
                 onFocus={() => setFocusedField('holder')}
                 onBlur={() => setFocusedField(null)}
               />
