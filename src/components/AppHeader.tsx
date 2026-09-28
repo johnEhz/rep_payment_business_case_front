@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
 import { toggleCart, selectCartCount, selectCartSubtotal } from '../store/slices/cartSlice';
@@ -27,6 +27,41 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
   const hasStepper = Boolean(currentStep && currentStep >= 2 && currentStep <= 4);
 
+  // Scroll detection to collapse only the header while keeping stepper pinned at top-0
+  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY;
+          const diff = currentY - lastScrollY.current;
+
+          // Always show when near the very top of the page
+          if (currentY <= 35) {
+            setIsHeaderHidden(false);
+          } else if (diff > 15 && currentY > 60) {
+            // Scrolling down by more than 15px -> smoothly collapse top bar
+            setIsHeaderHidden(true);
+          } else if (diff < -15) {
+            // Scrolling up by more than 15px -> restore top bar
+            setIsHeaderHidden(false);
+          }
+
+          lastScrollY.current = currentY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -49,72 +84,61 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {hasStepper ? (
           <div>
-            {/* Mobile View: Hide logo & brand name outside catalog, unify back button + stepper in 1 single compact row */}
-            <div className="sm:hidden flex items-center gap-1.5 h-13 py-1">
-              {showBack && (
-                <button
-                  onClick={handleBack}
-                  aria-label="Volver"
-                  className="w-8 h-8 shrink-0 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 transition-colors cursor-pointer"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
+            {/* Top Navigation Row: Collapses on scroll down, keeps Stepper pinned.
+                Logo and store name are completely HIDDEN on mobile & tablet (< lg) during checkout! */}
+            <div
+              className={`transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-between ${
+                isHeaderHidden
+                  ? 'max-h-0 opacity-0 py-0 pointer-events-none'
+                  : 'max-h-16 opacity-100 h-11 sm:h-13 py-1'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                {showBack && (
+                  <button
+                    onClick={handleBack}
+                    aria-label="Volver"
+                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 transition-colors cursor-pointer"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                  </svg>
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Logo and store name: HIDDEN on mobile and tablet during checkout (< lg), visible on desktop */}
+                <button
+                  onClick={handleLogoClick}
+                  className="hidden lg:flex items-center gap-2 text-left group cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 to-accent-violet text-white flex items-center justify-center shadow-xs">
+                    <span className="font-black text-sm">J</span>
+                  </div>
+                  <span className="font-bold text-gray-900 text-base tracking-tight">
+                    Jhz<span className="text-primary-600">Shop</span>
+                  </span>
                 </button>
-              )}
-              <div className="flex-1 min-w-0">
-                <StepProgress currentStep={currentStep!} />
+              </div>
+
+              {/* Discreet reassurance text on mobile (< lg) when store branding is hidden */}
+              <div className="lg:hidden text-[11px] text-gray-400 font-medium">
+                Compra protegida
               </div>
             </div>
 
-            {/* Desktop / Tablet View: Logo + Back Button in top row, Stepper cleanly placed below */}
-            <div className="hidden sm:block">
-              <div className="flex items-center justify-between h-15">
-                <div className="flex items-center gap-3">
-                  {showBack && (
-                    <button
-                      onClick={handleBack}
-                      aria-label="Volver"
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 transition-colors cursor-pointer"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                  )}
-                  <button
-                    onClick={handleLogoClick}
-                    className="flex items-center gap-2 text-left group cursor-pointer"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 to-accent-violet text-white flex items-center justify-center shadow-xs">
-                      <span className="font-black text-sm">J</span>
-                    </div>
-                    <span className="font-bold text-gray-900 text-base tracking-tight">
-                      Jhz<span className="text-primary-600">Shop</span>
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="max-w-xl mx-auto pb-2">
-                <StepProgress currentStep={currentStep!} />
-              </div>
+            {/* Stepper Row: ALWAYS pinned and visible at the top */}
+            <div className="max-w-xl mx-auto py-1.5 sm:py-2">
+              <StepProgress currentStep={currentStep!} />
             </div>
           </div>
         ) : (
-          /* Catalog View (Home/Store): Full header with logo and cart trigger */
+          /* Catalog View: Always shows full logo + cart */
           <div className="flex items-center justify-between h-16 sm:h-20">
             <button
               onClick={handleLogoClick}

@@ -128,7 +128,7 @@ export const SummaryPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <AppHeader currentStep={3} showBack onBack={handleBack} />
 
-      <main className="flex-1 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-28 sm:pb-32 lg:pb-12">
+      <main className="flex-1 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-44 sm:pb-48 lg:pb-12">
         {/* Header title */}
         <div className="mb-5 sm:mb-6">
           <div className="flex flex-wrap items-baseline gap-2 mb-1">
@@ -426,6 +426,9 @@ export const SummaryPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Extra clearance spacer on mobile so summary can scroll above the fixed payment button */}
+        <div className="h-16 lg:hidden" aria-hidden="true" />
 
         {/* Mobile Full-Width Fixed Bottom Bar - ONLY pay button */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 pb-5 z-40 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]">

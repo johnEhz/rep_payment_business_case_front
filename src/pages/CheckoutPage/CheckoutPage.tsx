@@ -406,7 +406,7 @@ export const CheckoutPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <AppHeader currentStep={2} showBack onBack={handleBack} />
 
-      <main className="flex-1 max-w-6xl mx-auto px-2.5 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-32 lg:pb-12">
+      <main className="flex-1 max-w-6xl mx-auto px-2.5 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-48 sm:pb-52 lg:pb-16">
         <div className="mb-4 sm:mb-5">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
             Finalizar Compra
@@ -686,6 +686,9 @@ export const CheckoutPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Extra clearance spacer on mobile so last input is never covered by fixed button */}
+              <div className="h-16 lg:hidden" aria-hidden="true" />
             </div>
 
             {/* Right Column: Order Summary & Action (order-1 on mobile, order-2 on desktop) */}

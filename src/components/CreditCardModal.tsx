@@ -184,7 +184,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
         {/* Modal Form with Scrollable Content and Fixed Bottom Actions */}
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 overflow-hidden min-h-0">
           {/* Scrollable form body */}
-          <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4">
+          <div className="p-3.5 sm:p-6 pb-8 sm:pb-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4">
             {/* Visual Credit Card matching physical ISO/IEC 7810 ID-1 proportions (1.586 : 1) */}
             <div className="w-full flex justify-center py-1">
               <div
