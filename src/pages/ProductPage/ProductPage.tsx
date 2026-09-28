@@ -130,22 +130,238 @@ export const ProductPage: React.FC = () => {
       <AppHeader />
       <CartDrawer />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 w-full">
-        {/* Banner Section (Desktop & Mobile Friendly) */}
-        <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-800 rounded-2xl p-5 sm:p-7 text-white mb-6 shadow-xs relative overflow-hidden">
-          <div className="relative z-10 max-w-2xl">
-            <h1 className="text-lg sm:text-2xl font-bold tracking-tight mb-1.5">
-              Explora Nuestro Catálogo
-            </h1>
-            <p className="text-blue-100 text-xs sm:text-sm leading-relaxed">
-              Encuentra los mejores productos con disponibilidad en tiempo real y realiza tu compra de forma rápida y segura en 5 sencillos pasos.
-            </p>
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 w-full pb-28 lg:pb-10">
+        {/* Mobile Search Bar (Top on Mobile, Clean & Uncluttered matching Mockup) */}
+        <div className="lg:hidden mb-3.5">
+          <div className="relative">
+            <svg
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <circle cx="11" cy="11" r="8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar productos por nombre, marca o modelo..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs sm:text-sm text-gray-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                aria-label="Limpiar búsqueda"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
 
-          {/* Decorative background shapes */}
-          <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute right-32 -top-12 w-48 h-48 bg-blue-400/20 rounded-full blur-xl pointer-events-none" />
+          {/* Active Filter Chips on Mobile */}
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              <span className="text-[11px] text-gray-400 font-medium mr-0.5">Filtros:</span>
+              {filters.category && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[11px] font-medium rounded-lg border border-emerald-200">
+                  {filters.category}
+                  <button
+                    type="button"
+                    onClick={() => handleFilterChange({ category: null })}
+                    className="p-0.5 hover:text-emerald-950"
+                  >
+                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              {filters.brand && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-medium rounded-lg border border-blue-200">
+                  {filters.brand}
+                  <button
+                    type="button"
+                    onClick={() => handleFilterChange({ brand: null })}
+                    className="p-0.5 hover:text-blue-900"
+                  >
+                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              {filters.inStockOnly && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg border border-green-200">
+                  En stock
+                  <button
+                    type="button"
+                    onClick={() => handleFilterChange({ inStockOnly: false })}
+                    className="p-0.5 hover:text-green-900"
+                  >
+                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleClearAllFilters}
+                className="text-[11px] text-red-600 font-semibold hover:underline ml-1 cursor-pointer"
+              >
+                Limpiar
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Promotional Discount & Featured Deals Banner (Mockup 2 Design) */}
+        <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white mb-5 shadow-sm relative overflow-hidden">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="max-w-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-xs">
+                  Ofertas Destacadas
+                </span>
+                <span className="text-[11px] font-medium text-emerald-100">
+                  Valle de Aburrá y Medellín
+                </span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white mb-2 leading-tight">
+                Clearance Sales
+              </h1>
+
+              <div className="inline-flex items-center gap-2 bg-white text-emerald-800 px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold shadow-xs mb-3">
+                <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black">
+                  %
+                </span>
+                <span>Hasta 30% de descuento en tecnología seleccionada</span>
+              </div>
+
+              <p className="text-emerald-50 text-xs sm:text-sm leading-relaxed max-w-lg mb-3">
+                Disponibilidad física garantizada en tiempo real. Al iniciar tu pago, aseguramos una <strong className="text-white underline decoration-emerald-300">reserva exclusiva de 15 minutos</strong> para evitar sobreventas.
+              </p>
+
+              {/* 3 Core Trust Pillars (Clean SVGs, No text emojis) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-white/20 text-xs">
+                <div className="flex items-center gap-2 text-emerald-50">
+                  <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-white leading-tight">15 Min de Reserva</p>
+                    <p className="text-[10px] text-emerald-200 leading-tight">Garantía sin cancelaciones</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-emerald-50">
+                  <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-white leading-tight">Domicilio Exacto</p>
+                    <p className="text-[10px] text-emerald-200 leading-tight">Fijación en mapa Mapbox</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-emerald-50">
+                  <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-white leading-tight">Cobro Cifrado Seguro</p>
+                    <p className="text-[10px] text-emerald-200 leading-tight">Tokenización y soporte oficial</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Showcase Visual Element matching mockup 2 */}
+            <div className="hidden md:flex items-center justify-center shrink-0 pr-4">
+              <div className="relative">
+                <div className="w-44 h-44 rounded-3xl bg-white/10 backdrop-blur-md p-3 flex items-center justify-center shadow-lg border border-white/20">
+                  <img
+                    src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=350&q=80"
+                    alt="Dispositivos destacados con descuento"
+                    className="w-full h-full object-contain filter drop-shadow-xl hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+                <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-[10px] font-black px-2.5 py-1 rounded-full shadow-md uppercase tracking-wider">
+                  Top Deal
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Decorative ambient flare */}
+          <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-64 h-64 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
+        </div>
+
+        {/* Categories Horizontal Carousel Bar (Mockup 2 Design) */}
+        {categories.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2.5">
+              <h2 className="text-xs sm:text-sm font-bold text-gray-900 tracking-tight">Categorías</h2>
+              {filters.category && (
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange({ category: null })}
+                  className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer"
+                >
+                  Ver todas
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+              <button
+                type="button"
+                onClick={() => handleFilterChange({ category: null })}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  filters.category === null
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                Todas
+              </button>
+              {categories.map((cat) => {
+                const isSelected = filters.category === cat.name;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleFilterChange({ category: isSelected ? null : cat.name })}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* 2-Column E-commerce Layout: Left Sidebar + Right Catalog */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -162,10 +378,10 @@ export const ProductPage: React.FC = () => {
 
           {/* Right Main Content */}
           <div className="flex-1 min-w-0 w-full">
-            {/* Toolbar: Search, Mobile Filters Trigger, and Page Controls */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-gray-100 mb-6 space-y-4">
+            {/* Desktop Toolbar: Search, Items Per Page, and Count */}
+            <div className="hidden lg:block bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-gray-100 mb-6 space-y-4">
               <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-                {/* Search Bar + Mobile Filter Button */}
+                {/* Search Bar on Desktop */}
                 <div className="flex items-center gap-2 flex-1 max-w-md">
                   <div className="relative flex-1">
                     <svg
@@ -188,29 +404,15 @@ export const ProductPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSearchTerm('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                        aria-label="Limpiar búsqueda"
                       >
-                        ✕
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     )}
                   </div>
-
-                  {/* Mobile Filters Toggle Button */}
-                  <button
-                    type="button"
-                    onClick={() => setIsMobileFiltersOpen(true)}
-                    className="lg:hidden flex items-center gap-1.5 px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold shrink-0 transition-colors"
-                  >
-                    <svg className="w-4 h-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>Filtros</span>
-                    {activeFiltersCount > 0 && (
-                      <span className="w-4 h-4 bg-blue-600 text-white rounded-full text-[10px] font-bold flex items-center justify-center">
-                        {activeFiltersCount}
-                      </span>
-                    )}
-                  </button>
                 </div>
 
                 {/* Items-per-page & Counter */}
@@ -228,7 +430,7 @@ export const ProductPage: React.FC = () => {
                         <button
                           key={opt}
                           onClick={() => handleItemsPerPageChange(opt)}
-                          className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
                             itemsPerPage === opt
                               ? 'bg-white text-blue-600 shadow-xs'
                               : 'text-gray-500 hover:text-gray-900'
@@ -242,20 +444,23 @@ export const ProductPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Active Filter Badges / Chips */}
+              {/* Active Filter Badges / Chips on Desktop */}
               {activeFiltersCount > 0 && (
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
                   <span className="text-xs text-gray-400 font-medium mr-1">Filtros aplicados:</span>
 
                   {filters.category && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg border border-blue-200">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 text-xs font-medium rounded-lg border border-emerald-200">
                       Categoría: {filters.category}
                       <button
                         type="button"
                         onClick={() => handleFilterChange({ category: null })}
-                        className="hover:text-blue-900 font-bold ml-0.5"
+                        className="hover:text-emerald-950 p-0.5"
+                        aria-label="Quitar filtro de categoría"
                       >
-                        ✕
+                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </span>
                   )}
@@ -266,9 +471,12 @@ export const ProductPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleFilterChange({ brand: null })}
-                        className="hover:text-blue-900 font-bold ml-0.5"
+                        className="hover:text-blue-900 p-0.5"
+                        aria-label="Quitar filtro de marca"
                       >
-                        ✕
+                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </span>
                   )}
@@ -279,9 +487,12 @@ export const ProductPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleFilterChange({ inStockOnly: false })}
-                        className="hover:text-green-900 font-bold ml-0.5"
+                        className="hover:text-green-900 p-0.5"
+                        aria-label="Quitar filtro de stock"
                       >
-                        ✕
+                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </span>
                   )}
@@ -297,9 +508,12 @@ export const ProductPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleFilterChange({ minPrice: null, maxPrice: null })}
-                        className="hover:text-blue-900 font-bold ml-0.5"
+                        className="hover:text-blue-900 p-0.5"
+                        aria-label="Quitar filtro de precio"
                       >
-                        ✕
+                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </span>
                   )}
@@ -310,9 +524,12 @@ export const ProductPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSearchTerm('')}
-                        className="hover:text-gray-900 font-bold ml-0.5"
+                        className="hover:text-gray-900 p-0.5"
+                        aria-label="Quitar término de búsqueda"
                       >
-                        ✕
+                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </span>
                   )}
@@ -379,10 +596,10 @@ export const ProductPage: React.FC = () => {
               </div>
             )}
 
-            {/* Products Grid: Responsive for Mobile, Tablet and Large Desktop */}
+            {/* Products Grid: 2 Columns on Mobile matching Mockups, 3 Columns on Tablet/Desktop */}
             {!loading && totalItems > 0 && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 mb-10">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-2.5 sm:gap-4 md:gap-6 mb-10">
                   {products.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
@@ -403,9 +620,12 @@ export const ProductPage: React.FC = () => {
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
-                        ← Anterior
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        <span>Anterior</span>
                       </button>
 
                       {/* Page numbers */}
@@ -416,7 +636,7 @@ export const ProductPage: React.FC = () => {
                             onClick={() => handlePageChange(pageNum)}
                             className={`w-9 h-9 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                               currentPage === pageNum
-                                ? 'bg-blue-600 text-white shadow-xs'
+                                ? 'bg-primary-600 text-white shadow-xs'
                                 : 'text-gray-600 hover:bg-gray-100'
                             }`}
                             aria-current={currentPage === pageNum ? 'page' : undefined}
@@ -430,9 +650,12 @@ export const ProductPage: React.FC = () => {
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
-                        Siguiente →
+                        <span>Siguiente</span>
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
                       </button>
                     </div>
                   </nav>
@@ -449,6 +672,57 @@ export const ProductPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Anchored Bottom Bar on Mobile: Filters & Pagination Only */}
+      <div className="lg:hidden fixed bottom-3.5 inset-x-4 z-40 max-w-sm mx-auto">
+        <div className="bg-white/95 backdrop-blur-md border border-gray-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.14)] rounded-2xl px-3.5 py-2 flex items-center justify-between">
+          {/* Left: Filters button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
+          >
+            <svg className="w-4 h-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="w-4 h-4 bg-blue-600 text-white rounded-full text-[10px] font-black flex items-center justify-center">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+
+          {/* Right: Quick Pagination */}
+          <div className="flex items-center gap-1 bg-gray-100/90 px-2 py-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+              aria-label="Página anterior"
+              className="w-6 h-6 flex items-center justify-center text-gray-700 disabled:opacity-25 disabled:cursor-not-allowed hover:bg-white rounded-lg transition-colors cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <span className="text-xs font-bold text-gray-800 px-1">
+              {currentPage} / {totalPages || 1}
+            </span>
+            <button
+              type="button"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              aria-label="Página siguiente"
+              className="w-6 h-6 flex items-center justify-center text-gray-700 disabled:opacity-25 disabled:cursor-not-allowed hover:bg-white rounded-lg transition-colors cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Mobile Filters Drawer Modal */}
       {isMobileFiltersOpen && (

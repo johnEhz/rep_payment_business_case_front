@@ -52,11 +52,12 @@ const App: React.FC = () => {
     <BrowserRouter>
       <AppRoutes />
       <Toaster
-        richColors
-        position="top-right"
-        closeButton
-        duration={3500}
+        position="bottom-center"
+        duration={2500}
         theme="light"
+        toastOptions={{
+          className: '!rounded-2xl !py-2.5 !px-4 !text-xs sm:!text-sm !font-medium !shadow-lg !border !border-gray-100 !bg-white/95 !backdrop-blur-md',
+        }}
       />
     </BrowserRouter>
   );

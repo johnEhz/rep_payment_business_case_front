@@ -214,9 +214,6 @@ export const CheckoutPage: React.FC = () => {
     if (!activePendingOrder) return;
     dispatch(setCurrentOrder(activePendingOrder));
     dispatch(setStep(3));
-    toast.success('Continuando con tu orden pendiente en curso', {
-      description: `Orden #${activePendingOrder.orderNumber}`,
-    });
     navigate('/summary');
   };
 
@@ -224,7 +221,7 @@ export const CheckoutPage: React.FC = () => {
     try {
       await ordersApi.cancelActiveOrder();
       setActivePendingOrder(null);
-      toast.info('Orden anterior cancelada e inventario liberado exitosamente');
+      toast.success('Orden anterior cancelada');
       dispatch(clearPreviewError());
       executeOrderPreview();
       dispatch(fetchProducts());
@@ -313,7 +310,6 @@ export const CheckoutPage: React.FC = () => {
       return;
     }
     if (previewLoading) {
-      toast.info('Calculando tarifas y verificando stock disponible...');
       return;
     }
     setValidatedDeliveryData(data);
@@ -413,7 +409,7 @@ export const CheckoutPage: React.FC = () => {
       <main className="flex-1 max-w-6xl mx-auto px-2.5 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-32 lg:pb-12">
         <div className="mb-4 sm:mb-5">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-            Paso 2: Información de Entrega
+            Información de Entrega y Pago
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm mt-1">
             Diligencia tus datos de despacho y selecciona el método de pago con tarjeta de crédito.
@@ -422,10 +418,10 @@ export const CheckoutPage: React.FC = () => {
 
         {/* Banner de orden pendiente activa con reserva de inventario */}
         {activePendingOrder && (
-          <div className="card border-blue-200 bg-blue-50/70 p-4 sm:p-5 mb-5 shadow-xs">
+          <div className="card border-primary-200 bg-primary-50/70 p-4 sm:p-5 mb-5 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
               <div>
-                <span className="inline-block text-[11px] font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded-md uppercase tracking-wider mb-1">
+                <span className="inline-block text-[11px] font-bold text-primary-800 bg-primary-100 px-2 py-0.5 rounded-md uppercase tracking-wider mb-1">
                   Orden en curso
                 </span>
                 <h3 className="text-sm sm:text-base font-bold text-gray-900">
@@ -433,7 +429,7 @@ export const CheckoutPage: React.FC = () => {
                 </h3>
                 <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
                   Tu inventario está apartado por los próximos{' '}
-                  <span className="font-bold text-blue-700 font-mono">
+                  <span className="font-bold text-primary-700 font-mono">
                     {Math.floor(activeOrderSeconds / 60)}:
                     {(activeOrderSeconds % 60).toString().padStart(2, '0')} min
                   </span>
@@ -468,7 +464,7 @@ export const CheckoutPage: React.FC = () => {
               {/* 1. Información personal */}
               <div className="card p-3.5 sm:p-6">
                 <div className="flex items-center gap-2.5 pb-4 mb-4 border-b border-gray-100">
-                  <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center">
                     1
                   </span>
                   <h2 className="text-base font-bold text-gray-900">
@@ -541,7 +537,7 @@ export const CheckoutPage: React.FC = () => {
               {/* 2. Dirección de entrega y catálogos geográficos */}
               <div className="card p-3.5 sm:p-6">
                 <div className="flex items-center gap-2.5 pb-4 mb-4 border-b border-gray-100">
-                  <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center">
                     2
                   </span>
                   <h2 className="text-base font-bold text-gray-900">
@@ -633,7 +629,7 @@ export const CheckoutPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setIsMapModalOpen(true)}
-                        className="text-xs text-blue-600 hover:text-blue-800 underline decoration-blue-300 underline-offset-2 transition-colors cursor-pointer font-medium"
+                        className="text-xs text-primary-600 hover:text-primary-800 underline decoration-primary-300 underline-offset-2 transition-colors cursor-pointer font-medium"
                       >
                         {selectedMapCoords
                           ? 'Modificar dirección en el mapa'
@@ -903,7 +899,7 @@ export const CheckoutPage: React.FC = () => {
                       <span className="text-sm font-bold text-gray-900 block">Total a pagar</span>
                       <span className="text-[10px] text-gray-400">Impuestos y flete incluidos</span>
                     </div>
-                    <span className="text-lg sm:text-xl font-black text-blue-700">
+                    <span className="text-lg sm:text-xl font-black text-primary-700">
                       {previewLoading ? (
                         <Skeleton className="h-7 w-28 rounded-lg" />
                       ) : (

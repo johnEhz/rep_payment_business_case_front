@@ -83,7 +83,7 @@ export const StatusPage: React.FC = () => {
           statusRes.orderStatus === 'DELIVERED' ||
           statusRes.activeTransaction?.status === 'APPROVED'
         ) {
-          toast.success('¡Pago aprobado exitosamente! Generando factura electrónica...');
+          toast.success('¡Pago aprobado exitosamente!');
           await dispatch(trackOrder({ orderNumber: order.orderNumber, token: order.accessToken }));
           dispatch(
             updatePaymentResult({
@@ -156,7 +156,12 @@ export const StatusPage: React.FC = () => {
 
   const isOrderCancelled = order?.status === 'CANCELLED' || liveStatus?.orderStatus === 'CANCELLED';
 
-  // REGLA CRÍTICA: No permitir un nuevo intento mientras exista una Transaction PENDING/indeterminada
+  useEffect(() => {
+    if (isSuccess || isOrderExpired) {
+      clearAllStorage();
+    }
+  }, [isSuccess, isOrderExpired]);
+
   const canRetry =
     !isPending &&
     (liveStatus ? liveStatus.canRetry : (paymentResult?.canRetry ?? true)) &&
@@ -214,9 +219,9 @@ export const StatusPage: React.FC = () => {
     setLiveStatus(null);
     setIsRetrying(true);
     setIsRetryModalOpen(false);
-    toast.loading('Aplicando tu pago... Estamos validando la transacción con la entidad financiera.', {
+    toast.loading('Validando transacción...', {
       id: 'retry-payment-toast',
-      duration: 20000,
+      duration: 15000,
     });
 
     try {
@@ -249,12 +254,8 @@ export const StatusPage: React.FC = () => {
 
       if (payOrder.fulfilled.match(payResult)) {
         if (payResult.payload?.status === 'APPROVED' || payResult.payload?.success) {
-          toast.success('¡Pago aprobado exitosamente! Generando factura...');
-        } else if (payResult.payload?.status === 'PENDING') {
-          toast.info('Tu pago está siendo procesado por la entidad financiera...', {
-            description: 'Consultando la confirmación de la pasarela...',
-          });
-        } else {
+          toast.success('¡Pago aprobado exitosamente!');
+        } else if (payResult.payload?.status !== 'PENDING') {
           toast.error('El pago no fue aprobado', {
             description: payResult.payload?.message || 'Por favor revisa los fondos o intenta con otra tarjeta.',
           });
@@ -298,28 +299,29 @@ export const StatusPage: React.FC = () => {
       </div>
 
       <main className="max-w-3xl mx-auto px-4 py-8 print:max-w-none print:p-0 print:m-0">
-        {/* ========================================================================= */}
-        {/* CASO 1: PAGO EXITOSO -> FACTURA ELECTRÓNICA FORMAL CON FOTOS E IMPRESIÓN */}
-        {/* ========================================================================= */}
         {isSuccess && order && (
           <>
-            {/* Banner de éxito en pantalla */}
-            <div className="print:hidden flex flex-col items-center mb-8">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4 shadow-sm">
-                <svg className="w-10 h-10 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            {/* Banner de éxito en pantalla con animación fluida de celebración */}
+            <div className="print:hidden flex flex-col items-center mb-8 animate-celebration-card">
+              <div className="w-20 h-20 rounded-full bg-emerald-100 ring-8 ring-emerald-50/80 flex items-center justify-center mb-4 shadow-sm animate-success-bounce">
+                <svg className="w-10 h-10 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold mb-2 text-center text-green-700">
-                ¡Pago Aprobado y Orden Confirmada!
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold uppercase tracking-wider mb-2 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Transacción Aprobada
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold mb-1.5 text-center text-gray-900 tracking-tight">
+                ¡Pago Exitoso y Confirmado!
               </h1>
-              <p className="text-gray-600 text-center max-w-md text-sm">
-                Tu transacción fue autorizada exitosamente. Tu pedido ya está programado para despacho y tu factura oficial se encuentra lista.
+              <p className="text-gray-600 text-center max-w-md text-xs sm:text-sm">
+                Tu transacción fue autorizada exitosamente. Tu pedido ya está programado para despacho y tu comprobante oficial se encuentra listo.
               </p>
             </div>
 
             {/* Contenedor formal de la Factura de Compra (Apta para pantalla e impresión @media print) */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-6 print:shadow-none print:border-none print:p-0">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-6 print:shadow-none print:border-none print:p-0 animate-celebration-card">
               {/* Membrete Factura */}
               <div className="border-b border-gray-200 pb-6 mb-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -394,6 +396,12 @@ export const StatusPage: React.FC = () => {
                       <dt className="text-gray-500">Estado de Pago:</dt>
                       <dd className="font-bold text-xs px-2 py-0.5 rounded bg-green-100 text-green-800">
                         APROBADO
+                      </dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-gray-500">Estado de Entrega:</dt>
+                      <dd className="font-bold text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                        {order.status === 'DELIVERED' ? 'Entregado' : 'Confirmado'}
                       </dd>
                     </div>
                     <div className="flex justify-between">
@@ -575,12 +583,12 @@ export const StatusPage: React.FC = () => {
 
             {/* Aviso de correo enviado */}
             {order.customerEmail && (
-              <div className="print:hidden flex gap-2.5 bg-blue-50 border border-blue-200 rounded-xl p-3.5 w-full mb-6 items-center">
-                <svg className="w-5 h-5 text-blue-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <div className="print:hidden flex gap-2.5 bg-primary-50 border border-primary-200 rounded-xl p-3.5 w-full mb-6 items-center">
+                <svg className="w-5 h-5 text-primary-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
                   <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
                 </svg>
-                <p className="text-xs sm:text-sm text-blue-800">
+                <p className="text-xs sm:text-sm text-primary-900">
                   Hemos enviado una copia formal de esta factura y confirmación de despacho a{' '}
                   <span className="font-bold underline">{order.customerEmail}</span>.
                 </p>
@@ -591,7 +599,7 @@ export const StatusPage: React.FC = () => {
             <div className="print:hidden flex flex-col sm:flex-row gap-3 w-full">
               <button
                 onClick={handlePrint}
-                className="flex-1 bg-white border-2 border-blue-600 text-blue-700 hover:bg-blue-50 font-bold py-3.5 px-6 rounded-xl transition-all duration-150 flex items-center justify-center shadow-sm"
+                className="flex-1 bg-white border-2 border-primary-600 text-primary-700 hover:bg-primary-50 font-bold py-3.5 px-6 rounded-xl transition-all duration-150 flex items-center justify-center shadow-sm"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -601,7 +609,7 @@ export const StatusPage: React.FC = () => {
 
               <button
                 onClick={handleStartOver}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-150 shadow-sm flex items-center justify-center"
+                className="flex-1 btn-primary font-bold py-3.5 px-6 rounded-xl shadow-md flex items-center justify-center"
               >
                 Seguir Comprando
               </button>
@@ -609,24 +617,21 @@ export const StatusPage: React.FC = () => {
           </>
         )}
 
-        {/* ========================================================================= */}
-        {/* CASO 2: PAGO EN PROCESO (PENDING) -> ESPERA TRANQUILA Y FLEXIBLE          */}
-        {/* ========================================================================= */}
         {isPending && !isSuccess && order && (
           <div className="flex flex-col items-center">
             {/* Indicador animado sobrio */}
             <div className="relative flex items-center justify-center w-20 h-20 mb-4">
-              <div className="absolute animate-ping w-16 h-16 rounded-full bg-blue-300 opacity-20"></div>
-              <div className="relative w-14 h-14 rounded-full bg-blue-50 border-2 border-blue-600 flex items-center justify-center shadow-sm">
-                <svg className="w-7 h-7 text-blue-600 animate-spin" viewBox="0 0 24 24" fill="none">
+              <div className="absolute animate-ping w-16 h-16 rounded-full bg-primary-300 opacity-20"></div>
+              <div className="relative w-14 h-14 rounded-full bg-primary-50 border-2 border-primary-600 flex items-center justify-center shadow-sm">
+                <svg className="w-7 h-7 text-primary-600 animate-spin" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
                   <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold uppercase tracking-wider mb-2">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-xs font-semibold uppercase tracking-wider mb-2">
+              <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse"></span>
               En validación con la entidad financiera
             </div>
 
@@ -662,7 +667,7 @@ export const StatusPage: React.FC = () => {
               {/* Mensaje de tranquilidad y notificación por correo */}
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 mb-4 text-left">
                 <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-blue-600 mt-0.5">
+                  <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0 text-primary-600 mt-0.5">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
@@ -675,7 +680,7 @@ export const StatusPage: React.FC = () => {
                       Puedes cerrar esta página o continuar navegando con total libertad. Tan pronto se confirme el resultado del pago, recibirás una notificación detallada y la factura electrónica en tu correo:
                     </p>
                     {order.customerEmail && (
-                      <p className="text-xs font-semibold text-blue-700 bg-white border border-blue-100 rounded-lg px-2.5 py-1.5 inline-block">
+                      <p className="text-xs font-semibold text-primary-700 bg-white border border-primary-200 rounded-lg px-2.5 py-1.5 inline-block">
                         {order.customerEmail}
                       </p>
                     )}
@@ -696,7 +701,7 @@ export const StatusPage: React.FC = () => {
             <div className="w-full flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => navigate('/')}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-150 shadow-sm flex items-center justify-center text-sm"
+                className="flex-1 btn-primary py-3.5 px-6 rounded-xl shadow-md flex items-center justify-center text-sm font-bold"
               >
                 Seguir Comprando
               </button>
@@ -714,9 +719,6 @@ export const StatusPage: React.FC = () => {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* CASO 3: PAGO RECHAZADO / NO APROBADO -> PANTALLA DE REINTENTO (SIN FACTURA) */}
-        {/* ========================================================================= */}
         {!isSuccess && !isPending && order && (
           <div className="flex flex-col items-center">
             {/* Ícono de pago fallido */}
@@ -727,7 +729,7 @@ export const StatusPage: React.FC = () => {
             </div>
 
             <h1 className="text-2xl font-bold mb-2 text-center text-red-600">
-              Pago No Aprobado
+              Pago Rechazado o No Aprobado
             </h1>
 
             <p className="text-gray-600 text-center max-w-md text-sm mb-6">
@@ -842,12 +844,12 @@ export const StatusPage: React.FC = () => {
               {!isOrderExpired && !isOrderCancelled && canRetry && (
                 <button
                   onClick={() => setIsRetryModalOpen(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-150 shadow-sm flex items-center justify-center gap-2"
+                  className="w-full btn-primary font-bold py-3.5 px-6 rounded-xl shadow-md flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  Reintentar Pago
+                  Cambiar método de pago
                 </button>
               )}
 
@@ -855,7 +857,7 @@ export const StatusPage: React.FC = () => {
                 onClick={handleStartOver}
                 className={`w-full font-bold py-3.5 px-6 rounded-xl transition-all duration-150 flex items-center justify-center ${
                   isOrderExpired || isOrderCancelled
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
+                    ? 'btn-primary shadow-md'
                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >

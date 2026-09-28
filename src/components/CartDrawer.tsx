@@ -58,12 +58,12 @@ export const CartDrawer: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="w-5 h-5 text-primary-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <h2 className="font-bold text-gray-900 text-lg">Tu carrito</h2>
             {!isEmpty && (
-              <span className="bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+              <span className="bg-primary-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                 {items.reduce((s, i) => s + i.quantity, 0)}
               </span>
             )}
@@ -101,7 +101,7 @@ export const CartDrawer: React.FC = () => {
               <p className="text-gray-500 font-medium">Tu carrito está vacío</p>
               <button
                 onClick={() => dispatch(closeCart())}
-                className="text-blue-600 font-semibold text-sm hover:text-blue-700"
+                className="text-primary-600 font-semibold text-sm hover:text-primary-700"
               >
                 Explorar productos →
               </button>
@@ -130,7 +130,7 @@ export const CartDrawer: React.FC = () => {
                     <p className="text-gray-900 font-semibold text-sm leading-snug line-clamp-2">
                       {item.product.name}
                     </p>
-                    <p className="text-blue-600 font-bold text-sm mt-0.5">
+                    <p className="text-primary-600 font-bold text-sm mt-0.5">
                       {formatCOP(item.product.priceInCents * item.quantity)}
                     </p>
 
@@ -193,7 +193,6 @@ export const CartDrawer: React.FC = () => {
                         onClick={() => {
                           dispatch(clearPreviewError());
                           dispatch(removeItem(item.productId));
-                          toast.info('Producto eliminado', { description: item.product.name });
                         }}
                         aria-label={`Eliminar ${item.product.name}`}
                         className="ml-auto text-red-400 hover:text-red-600 transition-colors p-1"
@@ -218,7 +217,7 @@ export const CartDrawer: React.FC = () => {
               <span className="text-gray-900 font-bold text-lg">{formatCOP(subtotal)}</span>
             </div>
             <p className="text-xs text-gray-400 text-center">
-              El costo de envío se calcula en el siguiente paso
+              El costo de envío se calculará con tu dirección de entrega
             </p>
             <button
               onClick={handleCheckout}
@@ -230,7 +229,6 @@ export const CartDrawer: React.FC = () => {
             <button
               onClick={() => {
                 dispatch(clearCart());
-                toast.info('Carrito vaciado');
               }}
               className="w-full text-center text-red-500 text-sm font-medium hover:text-red-700 transition-colors py-1"
             >

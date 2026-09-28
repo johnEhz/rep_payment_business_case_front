@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Product } from '../types';
@@ -10,7 +10,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-const PLACEHOLDER_IMAGE = 'https://placehold.co/400x300/f3f4f6/9ca3af?text=Sin+imagen';
+const PLACEHOLDER_IMAGE = 'https://placehold.co/400x400/f3f4f6/9ca3af?text=Sin+imagen';
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const dispatch = useAppDispatch();
@@ -21,7 +21,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const availableStock = product.stock - cartQty;
   const outOfStock = product.stock === 0;
 
-  const [imageLoaded, setImageLoaded] = useState(false);
+  // Compute a realistic promotional original price for strikethrough display (15% discount)
+  const originalPrice = Math.round(product.priceInCents * 1.15);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -30,8 +31,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       return;
     }
     dispatch(addItem({ product, quantity: 1 }));
-    toast.success('¡Agregado al carrito!', {
-      description: `${product.name}`,
+    toast.success('Agregado al carrito', {
+      description: product.name,
     });
     dispatch(openCart());
   };
@@ -45,58 +46,54 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <article
       onClick={handleCardClick}
-      className="card flex flex-col h-full overflow-hidden rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:border-blue-100 transition-all duration-200 cursor-pointer group"
+      className="card flex flex-col justify-between h-full rounded-2xl sm:rounded-3xl border border-gray-100 bg-white p-2.5 sm:p-4 hover:shadow-xl hover:border-blue-100 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
     >
-      {/* Image with optimized lazy loading */}
-      <div className="relative w-full aspect-[4/3] bg-gray-50 rounded-xl overflow-hidden mb-3">
-        <img
-          src={product.imageUrl || PLACEHOLDER_IMAGE}
-          alt={product.name}
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
-            setImageLoaded(true);
-          }}
-          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-        {outOfStock && (
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
-            <span className="text-white font-bold text-xs sm:text-sm bg-red-600 px-3 py-1 rounded-full shadow">
-              Agotado
-            </span>
-          </div>
-        )}
-        {!outOfStock && product.stock <= 3 && (
-          <div className="absolute top-2 right-2">
-            <span className="text-[11px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full shadow">
-              ¡Últimas unidades!
-            </span>
-          </div>
-        )}
-      </div>
+      <div>
+        {/* Image Box */}
+        <div className="relative w-full aspect-square bg-gray-50 rounded-xl sm:rounded-2xl p-2.5 flex items-center justify-center overflow-hidden mb-2.5">
+          <img
+            src={product.imageUrl || PLACEHOLDER_IMAGE}
+            alt={product.name}
+            decoding="async"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+            }}
+            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
+          />
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col px-1">
-        {/* Category & Brand */}
-        <div className="flex gap-1.5 mb-1.5 flex-wrap">
-          {product.category && (
-            <span className="text-[11px] text-blue-700 font-medium bg-blue-50 px-2 py-0.5 rounded-full">
-              {product.category}
+          {/* Discount Pill Badge */}
+          {!outOfStock && (
+            <span className="absolute top-2 left-2 text-[10px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.5 rounded-md shadow-2xs">
+              -15%
             </span>
           )}
-          {product.brand && (
-            <span className="text-[11px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full">
-              {product.brand}
-            </span>
+
+          {/* Favorite Heart Icon Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            aria-label="Favorito"
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-400 hover:text-red-500 shadow-2xs transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+
+          {/* Out of Stock Overlay */}
+          {outOfStock && (
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
+              <span className="text-white font-bold text-xs bg-red-600 px-2.5 py-1 rounded-full shadow">
+                Agotado
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Name */}
-        <h3 className="text-gray-900 font-bold text-sm sm:text-base leading-snug mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors">
+        {/* Product Title */}
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-900 leading-snug line-clamp-1 sm:line-clamp-2 group-hover:text-blue-600 transition-colors">
           <Link
             to={`/product/${productSlug}`}
             onClick={(e) => e.stopPropagation()}
@@ -106,40 +103,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </Link>
         </h3>
 
-        {/* Description */}
-        <p className="text-gray-500 text-xs leading-relaxed mb-3 line-clamp-2 flex-1">
-          {product.description}
-        </p>
-
-        {/* Price & Stock */}
-        <div className="flex items-end justify-between mb-3 pt-2 border-t border-gray-50">
-          <div>
-            <span className="text-xs text-gray-400 block font-medium">Precio</span>
-            <span className="text-blue-700 font-extrabold text-base sm:text-lg">
-              {formatCOP(product.priceInCents)}
-            </span>
-          </div>
-          <span
-            className="text-xs font-semibold px-2 py-0.5 rounded-full"
-            style={{
-              backgroundColor: product.stock > 3 ? '#ecfdf5' : product.stock > 0 ? '#fffbeb' : '#fef2f2',
-              color: product.stock > 3 ? '#047857' : product.stock > 0 ? '#b45309' : '#b91c1c',
-            }}
-          >
-            {outOfStock ? 'Sin stock' : `${product.stock} disp.`}
+        {/* Pricing line: Discounted Price + Strikethrough Original Price */}
+        <div className="flex items-baseline gap-1.5 mt-1">
+          <span className="text-xs sm:text-base font-black text-gray-900">
+            {formatCOP(product.priceInCents)}
+          </span>
+          <span className="text-[10px] sm:text-xs text-gray-400 line-through">
+            {formatCOP(originalPrice)}
           </span>
         </div>
 
-        {/* Add to cart button */}
-        <button
-          onClick={handleAdd}
-          disabled={outOfStock || availableStock <= 0}
-          aria-label={`Agregar ${product.name} al carrito`}
-          className="btn-primary text-xs sm:text-sm py-2.5 font-semibold"
-        >
-          {cartQty > 0 ? `En carrito (${cartQty})` : outOfStock ? 'Agotado' : 'Agregar al carrito'}
-        </button>
+        {/* Availability / Stock Line */}
+        <div className="flex items-center justify-between mt-1 text-[10px] sm:text-[11px] text-gray-500">
+          <span>{outOfStock ? 'Agotado' : `${product.stock} disponibles`}</span>
+          {product.brand && (
+            <span className="text-gray-400 font-medium truncate max-w-[70px]">
+              {product.brand}
+            </span>
+          )}
+        </div>
       </div>
+
+      {/* Touch-Friendly Add to Cart Button */}
+      <button
+        onClick={handleAdd}
+        disabled={outOfStock || availableStock <= 0}
+        aria-label={`Agregar ${product.name} al carrito`}
+        className="w-full mt-2.5 py-1.5 sm:py-2 px-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-xs disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer"
+      >
+        <span>{cartQty > 0 ? `En carrito (${cartQty})` : outOfStock ? 'Agotado' : 'Agregar'}</span>
+      </button>
     </article>
   );
 };

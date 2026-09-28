@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '../../store';
@@ -20,9 +20,14 @@ export const ProductDetailPage: React.FC = () => {
   const { selectedProduct, loading, error } = useAppSelector((s) => s.catalog);
   const cartItems = useAppSelector(selectCartItems);
 
-  const [selectedImage, setSelectedImage] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
-  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+
+  // Touch and drag swipe state for mobile carousel
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   useEffect(() => {
     if (productIdentifier) {
@@ -34,24 +39,34 @@ export const ProductDetailPage: React.FC = () => {
   }, [productIdentifier, dispatch]);
 
   const selectedProductId = selectedProduct?.id;
+  const selectedProductSlug = selectedProduct?.slug;
+
   useEffect(() => {
     if (selectedProduct) {
-      const primary =
-        selectedProduct.imageUrl ||
-        (selectedProduct.images && selectedProduct.images[0]) ||
-        PLACEHOLDER_IMAGE;
-      setSelectedImage(primary);
+      setCurrentImageIndex(0);
       setQuantity(1);
 
       // Si el usuario navegó con ID o formato anterior, normalizamos la URL con el slug amigable
-      if (selectedProduct.slug && productIdentifier !== selectedProduct.slug) {
-        window.history.replaceState(null, '', `/product/${selectedProduct.slug}`);
+      if (selectedProductSlug && productIdentifier !== selectedProductSlug) {
+        window.history.replaceState(null, '', `/product/${selectedProductSlug}`);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProductId]);
+  }, [selectedProductId, selectedProductSlug, productIdentifier]);
 
-  if (loading) {
+  // Compile image list safely
+  const allImages = useMemo(() => {
+    if (!selectedProduct) return [];
+    return Array.from(
+      new Set([
+        selectedProduct.imageUrl,
+        ...(selectedProduct.images || []),
+      ].filter((img): img is string => typeof img === 'string' && img.trim().length > 0))
+    );
+  }, [selectedProduct]);
+
+  // Handle Loading & Skeletons: prevent blank screen when data is fetching
+  if (loading || (!selectedProduct && !error)) {
     return <ProductDetailSkeleton />;
   }
 
@@ -82,13 +97,56 @@ export const ProductDetailPage: React.FC = () => {
   const availableStock = Math.max(0, selectedProduct.stock - cartQty);
   const isOutOfStock = selectedProduct.stock <= 0;
 
-  // Compile image list safely (main image + images array)
-  const allImages = Array.from(
-    new Set([
-      selectedProduct.imageUrl,
-      ...(selectedProduct.images || []),
-    ].filter((img): img is string => typeof img === 'string' && img.trim().length > 0))
-  );
+  // Swipe / Carousel Navigation
+  const handleNextImage = () => {
+    if (allImages.length <= 1) return;
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const handlePrevImage = () => {
+    if (allImages.length <= 1) return;
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const handleDragStart = (clientX: number, clientY: number) => {
+    if (allImages.length <= 1) return;
+    setTouchStartX(clientX);
+    setTouchStartY(clientY);
+    setDragOffset(0);
+    setIsDragging(true);
+  };
+
+  const handleDragMove = (clientX: number, clientY: number) => {
+    if (!isDragging || touchStartX === null) return;
+    const deltaX = clientX - touchStartX;
+    const deltaY = clientY - (touchStartY ?? 0);
+
+    if (Math.abs(deltaX) > Math.abs(deltaY) || Math.abs(deltaX) > 10) {
+      setDragOffset(deltaX * 0.7);
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (!isDragging || allImages.length <= 1) {
+      setIsDragging(false);
+      setDragOffset(0);
+      setTouchStartX(null);
+      setTouchStartY(null);
+      return;
+    }
+
+    const threshold = 40;
+    if (dragOffset < -threshold) {
+      handleNextImage();
+    } else if (dragOffset > threshold) {
+      handlePrevImage();
+    }
+
+    setIsDragging(false);
+    setDragOffset(0);
+    setTouchStartX(null);
+    setTouchStartY(null);
+  };
 
   const handleAddToCart = () => {
     if (availableStock <= 0) {
@@ -114,24 +172,17 @@ export const ProductDetailPage: React.FC = () => {
     navigate('/checkout');
   };
 
-  const handleSelectThumbnail = (imgUrl: string) => {
-    if (imgUrl !== selectedImage) {
-      setImageLoaded(false);
-      setSelectedImage(imgUrl);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <AppHeader />
       <CartDrawer />
 
-      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-6 md:py-8 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-6 md:py-8 w-full pb-28 sm:pb-8">
         {/* Breadcrumb navigation */}
         <nav aria-label="Breadcrumb" className="mb-3.5 sm:mb-5">
           <ol className="flex items-center space-x-2 text-xs text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap">
             <li className="shrink-0">
-              <Link to="/" className="hover:text-blue-600 transition-colors flex items-center gap-1 font-semibold text-blue-600 sm:text-gray-500">
+              <Link to="/" className="hover:text-primary-600 transition-colors flex items-center gap-1 font-semibold text-primary-600 sm:text-gray-500">
                 <span>←</span>
                 <span>Catálogo</span>
               </Link>
@@ -157,32 +208,54 @@ export const ProductDetailPage: React.FC = () => {
 
         {/* Product Detail Layout: 2 Columns on Desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 md:p-10 shadow-xs border border-gray-100">
-          {/* Column 1: Image Gallery (6 cols on lg) */}
+          {/* Column 1: Image Gallery & Drag/Swipe Carousel (6 cols on lg) */}
           <div className="lg:col-span-6 flex flex-col items-center">
-            {/* Main Hero Image */}
-            <div className="relative w-full aspect-square max-w-md bg-gray-50 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100 flex items-center justify-center">
-              {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-200 animate-pulse z-0" />
-              )}
-              <img
-                key={selectedImage}
-                src={selectedImage || PLACEHOLDER_IMAGE}
-                alt={selectedProduct.name}
-                decoding="async"
-                ref={(img) => {
-                  if (img && img.complete && img.naturalWidth > 0 && !imageLoaded) {
-                    setImageLoaded(true);
-                  }
+            {/* Main Hero Image Carousel */}
+            <div
+              className="relative w-full aspect-square max-w-md bg-gray-100 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100 flex items-center justify-center select-none cursor-grab active:cursor-grabbing touch-pan-y"
+              onTouchStart={(e) => handleDragStart(e.touches[0].clientX, e.touches[0].clientY)}
+              onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
+              onTouchEnd={handleDragEnd}
+              onMouseDown={(e) => handleDragStart(e.clientX, e.clientY)}
+              onMouseMove={(e) => handleDragMove(e.clientX, e.clientY)}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
+            >
+              {/* Soft Slide Track */}
+              <div
+                className="w-full h-full flex"
+                style={{
+                  transform: isDragging
+                    ? `translateX(calc(-${currentImageIndex * 100}% + ${dragOffset}px))`
+                    : `translateX(-${currentImageIndex * 100}%)`,
+                  transition: isDragging ? 'none' : 'transform 0.42s cubic-bezier(0.22, 1, 0.36, 1)',
                 }}
-                onLoad={() => setImageLoaded(true)}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
-                  setImageLoaded(true);
-                }}
-                className={`w-full h-full object-cover transition-opacity duration-200 relative z-10 ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
+              >
+                {allImages.length > 0 ? (
+                  allImages.map((imgUrl, idx) => (
+                    <div key={idx} className="w-full h-full shrink-0 flex items-center justify-center bg-gray-100">
+                      <img
+                        src={imgUrl}
+                        alt={`${selectedProduct.name} - ${idx + 1}`}
+                        decoding="async"
+                        draggable={false}
+                        className="w-full h-full object-cover select-none pointer-events-none"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="w-full h-full shrink-0 flex items-center justify-center bg-gray-100">
+                    <img
+                      src={PLACEHOLDER_IMAGE}
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover select-none pointer-events-none"
+                    />
+                  </div>
+                )}
+              </div>
 
               {isOutOfStock && (
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-20">
@@ -190,6 +263,64 @@ export const ProductDetailPage: React.FC = () => {
                     Agotado
                   </span>
                 </div>
+              )}
+
+              {/* Navigation Arrows for multi-image products */}
+              {allImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrevImage();
+                    }}
+                    aria-label="Imagen anterior"
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/85 hover:bg-white text-gray-700 shadow-md flex items-center justify-center transition-all z-20 active:scale-95 cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextImage();
+                    }}
+                    aria-label="Imagen siguiente"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/85 hover:bg-white text-gray-700 shadow-md flex items-center justify-center transition-all z-20 active:scale-95 cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+
+                  {/* Counter Badge */}
+                  <span className="absolute top-3 right-3 z-20 text-[10px] font-bold bg-black/50 backdrop-blur-xs text-white px-2 py-0.5 rounded-full pointer-events-none">
+                    {currentImageIndex + 1} / {allImages.length}
+                  </span>
+
+                  {/* Dot Indicators */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/40 backdrop-blur-xs px-2.5 py-1 rounded-full pointer-events-auto">
+                    {allImages.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImageIndex(idx);
+                        }}
+                        className={`transition-all rounded-full cursor-pointer ${
+                          idx === currentImageIndex
+                            ? 'w-4 h-1.5 bg-white'
+                            : 'w-1.5 h-1.5 bg-white/60 hover:bg-white/90'
+                        }`}
+                        aria-label={`Ver foto ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 
@@ -200,17 +331,17 @@ export const ProductDetailPage: React.FC = () => {
                   <button
                     key={index}
                     type="button"
-                    onClick={() => handleSelectThumbnail(imgUrl)}
+                    onClick={() => setCurrentImageIndex(index)}
                     className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
-                      selectedImage === imgUrl
-                        ? 'border-blue-600 ring-2 ring-blue-100 scale-105'
+                      currentImageIndex === index
+                        ? 'border-primary-600 ring-2 ring-primary-100 scale-105'
                         : 'border-gray-200 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img
                       src={imgUrl}
                       alt={`Miniatura ${index + 1}`}
-                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
@@ -228,7 +359,7 @@ export const ProductDetailPage: React.FC = () => {
               {/* Badges */}
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
                 {selectedProduct.category && (
-                  <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                  <span className="text-[11px] font-semibold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-200">
                     {selectedProduct.category}
                   </span>
                 )}
@@ -256,7 +387,7 @@ export const ProductDetailPage: React.FC = () => {
 
               {/* Price */}
               <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5 mb-3.5 sm:mb-4">
-                <span className="text-2xl sm:text-3xl font-black text-blue-700">
+                <span className="text-2xl sm:text-3xl font-black text-primary-700">
                   {formatCOP(selectedProduct.priceInCents)}
                 </span>
                 <span className="text-[11px] sm:text-xs font-medium text-gray-400">
@@ -264,7 +395,7 @@ export const ProductDetailPage: React.FC = () => {
                 </span>
               </div>
 
-              {/* Structured Product Specifications (Brand, Category, Stock in Sleek 3-Col Bar) */}
+              {/* Structured Product Specifications (Brand, Category, Stock) */}
               <div className="bg-gray-50/90 border border-gray-100 rounded-xl p-3 sm:p-3.5 mb-4">
                 <div className="grid grid-cols-3 gap-2 divide-x divide-gray-200/70 text-xs">
                   {/* Marca */}
@@ -300,7 +431,7 @@ export const ProductDetailPage: React.FC = () => {
                       {isOutOfStock ? 'Agotado' : `${selectedProduct.stock} uds`}
                     </span>
                     {cartQty > 0 && !isOutOfStock && (
-                      <span className="text-[10px] text-blue-600 font-medium block truncate">
+                      <span className="text-[10px] text-primary-600 font-medium block truncate">
                         ({cartQty} en carrito)
                       </span>
                     )}
@@ -326,7 +457,7 @@ export const ProductDetailPage: React.FC = () => {
                       Cantidad a comprar
                     </label>
                     {cartQty > 0 && (
-                      <span className="text-xs text-blue-600 font-medium">
+                      <span className="text-xs text-primary-600 font-medium">
                         Ya tienes {cartQty} en carrito
                       </span>
                     )}
@@ -370,7 +501,7 @@ export const ProductDetailPage: React.FC = () => {
                       </span>
                     </div>
                   ) : (
-                    <div className="bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-xl p-2.5">
+                    <div className="bg-primary-50 border border-primary-200 text-primary-800 text-xs rounded-xl p-2.5">
                       Ya tienes todas las unidades disponibles ({cartQty}) en tu carrito.
                     </div>
                   )}
@@ -378,14 +509,14 @@ export const ProductDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Actions: Clean 2-column buttons on mobile & desktop */}
-            <div className="pt-2">
+            {/* Desktop Actions */}
+            <div className="pt-2 hidden sm:block">
               <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                 <button
                   type="button"
                   onClick={handleAddToCart}
                   disabled={isOutOfStock || availableStock <= 0}
-                  className="btn-secondary py-3 flex items-center justify-center gap-1.5 font-bold text-xs sm:text-sm px-2 sm:px-4"
+                  className="btn-secondary py-3 flex items-center justify-center gap-1.5 font-bold text-xs sm:text-sm px-2 sm:px-4 cursor-pointer"
                 >
                   <svg className="w-4 h-4 text-gray-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -404,7 +535,7 @@ export const ProductDetailPage: React.FC = () => {
                   type="button"
                   onClick={handleBuyNow}
                   disabled={isOutOfStock}
-                  className="btn-primary py-3 flex items-center justify-center gap-1.5 font-bold shadow-md shadow-blue-500/10 text-xs sm:text-sm px-2 sm:px-4"
+                  className="btn-primary py-3 flex items-center justify-center gap-1.5 font-bold shadow-md shadow-primary-500/20 text-xs sm:text-sm px-2 sm:px-4 cursor-pointer"
                 >
                   Comprar ahora
                 </button>
@@ -413,6 +544,45 @@ export const ProductDetailPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Fixed Sticky Action Bar for Mobile Screens */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3.5 py-2.5 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center gap-2.5">
+          {/* Price preview */}
+          <div className="shrink-0 pr-1 flex flex-col justify-center">
+            <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider leading-none">Total</span>
+            <span className="text-sm font-extrabold text-primary-700 leading-tight mt-0.5">
+              {formatCOP(selectedProduct.priceInCents * quantity)}
+            </span>
+          </div>
+
+          {/* Add to Cart button */}
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={isOutOfStock || availableStock <= 0}
+            className="btn-secondary flex-1 py-2.5 px-2 flex items-center justify-center gap-1.5 text-xs font-bold rounded-xl active:scale-95 transition-transform"
+          >
+            <svg className="w-4 h-4 text-gray-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span className="truncate">{cartQty > 0 ? `+ (${cartQty})` : 'Carrito'}</span>
+          </button>
+
+          {/* Buy Now button */}
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            disabled={isOutOfStock}
+            className="btn-primary flex-1 py-2.5 px-2.5 flex items-center justify-center gap-1 text-xs font-bold rounded-xl shadow-md shadow-primary-500/25 active:scale-95 transition-transform"
+          >
+            <span>Comprar</span>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

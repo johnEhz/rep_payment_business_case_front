@@ -106,7 +106,7 @@ describe('StatusPage', () => {
 
     it('shows the order number', () => {
       renderStatusPage(successPaymentResult);
-      expect(screen.getByText('JHM-123456')).toBeInTheDocument();
+      expect(screen.getAllByText('JHM-123456')[0]).toBeInTheDocument();
     });
 
     it('shows customer name', () => {

@@ -46,6 +46,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   });
 
   const [expiryDisplay, setExpiryDisplay] = useState('');
+  const [focusedField, setFocusedField] = useState<'number' | 'holder' | 'expiry' | 'cvc' | null>(null);
 
   // Explicitly register month and year fields since they are updated via unified input
   useEffect(() => {
@@ -57,7 +58,10 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   const cardHolder = watch('cardHolder') || '';
   const expMonth = watch('expMonth') || '';
   const expYear = watch('expYear') || '';
+  const cvc = watch('cvc') || '';
   const brand: CardBrand = detectCardBrand(cardNumber);
+  const cleanDigits = cardNumber.replace(/\D/g, '');
+  const last4 = cleanDigits.slice(-4);
 
   // Close on Escape
   useEffect(() => {
@@ -150,95 +154,112 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 overflow-hidden">
           {/* Scrollable form body */}
           <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-3.5 sm:space-y-4">
-            {/* Visual Realistic Simulated Card Preview (Compact on Mobile) */}
-            <div className="relative h-36 sm:h-44 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-slate-950 via-slate-900 to-zinc-900 text-white p-3.5 sm:p-5 shadow-lg flex flex-col justify-between overflow-hidden border border-slate-700/60 shrink-0">
-              {/* Subtle glossy light reflection overlay */}
-              <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute left-1/3 -bottom-10 w-44 h-44 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/30 pointer-events-none rounded-xl sm:rounded-2xl" />
+            {/* Visual Ultra-Clean Apple Wallet Styled Card Preview */}
+            <div
+              className={`relative h-44 sm:h-48 rounded-[24px] sm:rounded-[28px] text-white p-5 sm:p-6 shadow-2xl flex flex-col justify-between overflow-hidden border transition-all duration-500 shrink-0 ${
+                brand === 'mastercard'
+                  ? 'bg-gradient-to-br from-[#2a2224] via-[#1d1d20] to-[#141416] border-amber-500/30 shadow-amber-950/20'
+                  : brand === 'visa'
+                  ? 'bg-gradient-to-br from-[#1d2232] via-[#1b1c21] to-[#121318] border-indigo-500/30 shadow-indigo-950/20'
+                  : 'bg-gradient-to-br from-[#26272b] via-[#1b1c1e] to-[#131315] border-white/10 shadow-black/40'
+              }`}
+            >
+              {/* Glossy sheen overlay */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.04] via-transparent to-white/[0.08] pointer-events-none rounded-[24px] sm:rounded-[28px]" />
 
-              {/* Top row: Realistic Chip, Contactless Icon, and Brand Logo */}
-              <div className="flex items-center justify-between z-10">
-                <div className="flex items-center gap-2.5">
-                  {/* EMV Gold Chip with Circuit Lines */}
-                  <div className="w-9 h-6 sm:w-11 sm:h-8 rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-amber-500 border border-amber-300/80 shadow-xs relative flex items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 border-t border-b border-amber-700/30 top-1.5 bottom-1.5 sm:top-2 sm:bottom-2" />
-                    <div className="absolute inset-0 border-l border-r border-amber-700/30 left-2.5 right-2.5 sm:left-3 sm:right-3" />
-                    <div className="w-3.5 h-2.5 sm:w-4 sm:h-3 border border-amber-800/40 rounded-xs bg-amber-300/40" />
-                  </div>
+              {/* Dynamic subtle ambient glow */}
+              <div
+                className={`absolute -right-6 -top-6 w-36 h-36 rounded-full blur-3xl pointer-events-none transition-opacity duration-700 ${
+                  brand === 'mastercard'
+                    ? 'bg-amber-500/15 opacity-100'
+                    : brand === 'visa'
+                    ? 'bg-indigo-500/20 opacity-100'
+                    : 'bg-white/5 opacity-50'
+                }`}
+              />
 
-                  {/* Contactless waves symbol */}
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 -rotate-90 opacity-75"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                  >
-                    <path d="M5 12.55a11 11 0 0 1 14.08 0" strokeWidth="2.2" strokeLinecap="round" />
-                    <path d="M1.42 9a16 16 0 0 1 21.16 0" strokeWidth="2.2" strokeLinecap="round" />
-                    <path d="M8.53 16.11a6 6 0 0 1 6.95 0" strokeWidth="2.2" strokeLinecap="round" />
-                  </svg>
-                </div>
-
-                {/* Brand Logo Badge */}
-                <div className="flex items-center">
-                  {brand === 'visa' && (
-                    <div className="bg-white/95 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-md shadow-xs flex items-center">
-                      <span className="font-extrabold italic tracking-wider text-blue-800 text-xs sm:text-sm">
-                        VISA
-                      </span>
-                    </div>
-                  )}
-
-                  {brand === 'mastercard' && (
-                    <div className="flex items-center -space-x-1.5 sm:-space-x-2 bg-white/95 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-md shadow-xs">
-                      <div className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full bg-red-600 opacity-90" />
-                      <div className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full bg-amber-500 opacity-90" />
-                    </div>
-                  )}
-
-                  {brand === 'unknown' && (
-                    <span className="text-[10px] sm:text-xs text-slate-400 font-mono tracking-widest uppercase">
-                      TARJETA
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Card Number display: 4-4-4-4 monospace embossed format */}
-              <div className="z-10 my-auto py-0.5">
-                <p className="font-mono text-xs sm:text-base md:text-lg font-bold tracking-[0.14em] sm:tracking-[0.2em] text-slate-100 drop-shadow-sm select-none truncate">
-                  {displayCardNumber()}
-                </p>
-              </div>
-
-              {/* Bottom row: Cardholder and Expiry (Month and Year joined by /) */}
-              <div className="flex items-end justify-between z-10">
-                <div className="min-w-0 flex-1 pr-2 sm:pr-3">
-                  <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-slate-400 block mb-0.5">
-                    Titular
+              {/* Top row: 'Wallet' label + Cardholder Name on left, '+' minimal button on right */}
+              <div className="flex items-start justify-between z-10">
+                <div
+                  className={`transition-all duration-200 ${
+                    focusedField === 'holder' ? 'scale-[1.02] transform' : ''
+                  }`}
+                >
+                  <span className="text-[11px] sm:text-xs font-semibold text-white/60 tracking-wider block">
+                    Wallet
                   </span>
-                  <p className="font-mono text-[11px] sm:text-xs md:text-sm font-semibold tracking-wider text-slate-200 truncate uppercase">
-                    {cardHolder || 'NOMBRE TITULAR'}
+                  <p className="text-base sm:text-lg font-medium text-white/95 tracking-tight truncate max-w-[240px] sm:max-w-[300px] mt-0.5">
+                    {cardHolder || 'Josh Hill'}
                   </p>
                 </div>
 
-                {/* Expiry: Month and Year united separated by / */}
-                <div className="shrink-0 flex items-center gap-1.5 sm:gap-2">
-                  <div className="text-[7px] sm:text-[8px] font-mono uppercase tracking-tighter text-slate-400 leading-tight text-right">
-                    <span>VALID</span>
-                    <br />
-                    <span>THRU</span>
-                  </div>
-                  <div className="font-mono text-xs sm:text-sm md:text-base font-bold tracking-widest text-white drop-shadow-xs">
-                    <span className={expMonth ? 'text-white' : 'text-slate-500'}>
-                      {expMonth || 'MM'}
+                {/* Minimalist Plus action button from reference */}
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white/80 transition-all shrink-0">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Bottom row: Formatted number & Expiry on left, Brand Logo + Last4 on right */}
+              <div className="flex items-end justify-between z-10 pt-2">
+                <div
+                  className={`space-y-1 transition-all duration-200 ${
+                    focusedField === 'number' || focusedField === 'expiry' ? 'scale-[1.02] transform' : ''
+                  }`}
+                >
+                  {/* Card Number display */}
+                  <p className="font-mono text-base sm:text-xl font-bold tracking-[0.14em] sm:tracking-[0.18em] text-white drop-shadow-sm select-none">
+                    {displayCardNumber()}
+                  </p>
+
+                  {/* Account / Expiry subtitle info */}
+                  <div className="flex items-center gap-2.5 text-[11px] sm:text-xs text-white/50 font-mono">
+                    <span>
+                      Account ** {last4 || '5087'}
                     </span>
-                    <span className="text-slate-400 mx-0.5">/</span>
-                    <span className={expYear ? 'text-white' : 'text-slate-500'}>
-                      {expYear || 'AA'}
+                    <span className="text-white/20">•</span>
+                    <span className={expMonth || expYear ? 'text-white/80 font-semibold' : ''}>
+                      {expMonth || 'MM'}/{expYear || 'AA'}
                     </span>
+                    {cvc && (
+                      <>
+                        <span className="text-white/20">•</span>
+                        <span className="text-white/80">CVC •••</span>
+                      </>
+                    )}
                   </div>
+                </div>
+
+                {/* Right: Dynamic Brand Logo & Masked Digits (Exactly like photo) */}
+                <div className="flex flex-col items-end shrink-0 gap-1">
+                  <div key={brand} className="animate-brand-pop flex items-center">
+                    {brand === 'mastercard' && (
+                      <div className="flex items-center -space-x-2">
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#EB001B] shadow-xs" />
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#F79E1B] opacity-90 shadow-xs" />
+                      </div>
+                    )}
+
+                    {brand === 'visa' && (
+                      <div className="flex items-center px-1">
+                        <span className="text-lg sm:text-xl font-black italic tracking-widest text-white drop-shadow-md">
+                          VISA
+                        </span>
+                      </div>
+                    )}
+
+                    {brand === 'unknown' && (
+                      <div className="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center">
+                        <span className="text-[9px] font-mono text-white/40">••</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <span className="font-mono text-[10px] sm:text-xs text-white/50 tracking-wider">
+                    **** {last4 || '3264'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -256,18 +277,18 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                 {/* Supported brands indicators */}
                 <div className="flex items-center gap-1.5 text-xs text-gray-400">
                   <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
                       brand === 'visa'
-                        ? 'bg-blue-100 text-blue-800'
+                        ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300'
                         : 'bg-gray-100 text-gray-400'
                     }`}
                   >
                     VISA
                   </span>
                   <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
                       brand === 'mastercard'
-                        ? 'bg-amber-100 text-amber-800'
+                        ? 'bg-amber-100 text-amber-800 ring-1 ring-amber-300'
                         : 'bg-gray-100 text-gray-400'
                     }`}
                   >
@@ -293,19 +314,21 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                       e.target.value = val.replace(/(.{4})/g, '$1 ').trim();
                     },
                   })}
+                  onFocus={() => setFocusedField('number')}
+                  onBlur={() => setFocusedField(null)}
                 />
 
                 {/* Dynamic Brand Logo inside the input */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                   {brand === 'visa' && (
-                    <span className="font-extrabold italic text-blue-700 text-sm">
+                    <span className="font-extrabold italic text-indigo-600 text-sm animate-brand-pop">
                       VISA
                     </span>
                   )}
                   {brand === 'mastercard' && (
-                    <div className="flex items-center -space-x-1.5">
-                      <div className="w-3.5 h-3.5 rounded-full bg-red-600 opacity-90" />
-                      <div className="w-3.5 h-3.5 rounded-full bg-amber-500 opacity-90" />
+                    <div className="flex items-center -space-x-1.5 animate-brand-pop">
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#EB001B] opacity-90" />
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#F79E1B] opacity-90" />
                     </div>
                   )}
                   {brand === 'unknown' && null}
@@ -332,6 +355,8 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                 minLength={5}
                 className={`input-field uppercase ${errors.cardHolder ? 'error' : ''}`}
                 {...register('cardHolder')}
+                onFocus={() => setFocusedField('holder')}
+                onBlur={() => setFocusedField(null)}
               />
               {errors.cardHolder && (
                 <p className="error-text">{errors.cardHolder.message}</p>
@@ -358,6 +383,8 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                     maxLength={5}
                     value={expiryDisplay}
                     onChange={handleExpiryChange}
+                    onFocus={() => setFocusedField('expiry')}
+                    onBlur={() => setFocusedField(null)}
                     className={`input-field text-center font-mono tracking-wider ${
                       expiryErrorMessage ? 'error' : ''
                     }`}
@@ -390,6 +417,8 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                         e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
                       },
                     })}
+                    onFocus={() => setFocusedField('cvc')}
+                    onBlur={() => setFocusedField(null)}
                   />
                 </div>
                 {errors.cvc && <p className="error-text">{errors.cvc.message}</p>}
@@ -422,7 +451,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                   {...register('termsAccepted')}
                 />
                 <span className="text-xs text-gray-600 leading-relaxed">
@@ -431,7 +460,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 underline hover:text-blue-800 font-semibold"
+                    className="text-primary-600 underline hover:text-primary-700 font-semibold"
                     onClick={(e) => e.stopPropagation()}
                   >
                     términos y condiciones

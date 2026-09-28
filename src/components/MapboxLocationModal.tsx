@@ -332,7 +332,6 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
       return;
     }
 
-    toast.info('Obteniendo ubicación del dispositivo...');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude;

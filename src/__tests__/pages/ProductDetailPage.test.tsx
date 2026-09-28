@@ -98,7 +98,7 @@ describe('ProductDetailPage', () => {
     expect(screen.getByText('MountainBrand')).toBeInTheDocument();
 
     // Check price
-    expect(screen.getByText(/250/)).toBeInTheDocument();
+    expect(screen.getAllByText(/250/)[0]).toBeInTheDocument();
 
     // Check description
     expect(

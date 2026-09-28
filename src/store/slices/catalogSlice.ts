@@ -26,7 +26,7 @@ const initialState: CatalogState = {
   categories: [],
   brands: [],
   selectedProduct: null,
-  loading: false,
+  loading: true,
   error: null,
   filters: {
     page: 1,
