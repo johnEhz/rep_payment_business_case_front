@@ -28,8 +28,13 @@ export const SummaryPage: React.FC = () => {
   const [tokenizing, setTokenizing] = useState(false);
   const [tokenError, setTokenError] = useState<string | null>(null);
 
-  // Guard: if no order or missing card info (e.g. lost on hard reload), send back to step 2
+  // Guard: if order is already paid, or no order or missing card info, redirect appropriately
   useEffect(() => {
+    if (currentOrder?.status === 'PAID' || currentOrder?.status === 'DELIVERED') {
+      toast.info('Esta orden ya fue procesada exitosamente.');
+      navigate('/', { replace: true });
+      return;
+    }
     if (!currentOrder) {
       navigate('/checkout');
       return;
@@ -129,28 +134,23 @@ export const SummaryPage: React.FC = () => {
       <AppHeader currentStep={3} showBack onBack={handleBack} />
 
       <main className="flex-1 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-44 sm:pb-48 lg:pb-12">
-        {/* Header title */}
-        <div className="mb-5 sm:mb-6">
-          <div className="flex flex-wrap items-baseline gap-2 mb-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-              Resumen y Confirmación de Pago
-            </h1>
-            <span className="text-xs sm:text-sm font-mono text-gray-400 font-medium">
-              #{currentOrder.orderNumber}
-            </span>
-          </div>
+        {/* Order reference number */}
+        <div className="mb-3 sm:mb-4">
+          <span className="text-xs sm:text-sm font-mono text-gray-500 font-medium">
+            Orden #{currentOrder.orderNumber}
+          </span>
         </div>
 
         {/* 2-Column Responsive Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
           {/* Column 1: Order Items, Payment Method, Delivery Address (lg:col-span-7) */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className="order-2 lg:order-1 lg:col-span-7 space-y-4">
             {/* Products in this order */}
             <div className="card p-4 sm:p-6">
               <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-gray-900">
-                    Artículos en el pedido
+                    Artículos
                   </h2>
                   <span className="text-xs text-gray-400 font-normal">
                     ({currentOrder.items?.reduce((s, i) => s + i.quantity, 0)} uds)
@@ -281,13 +281,6 @@ export const SummaryPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-
-              {/* Integrated terms acceptance note */}
-              <div className="mt-3.5 pt-3 border-t border-gray-100 text-xs text-gray-400">
-                <span className="text-[11px]">
-                  Términos y condiciones aceptados para esta compra
-                </span>
-              </div>
             </div>
 
             {(tokenError || payError) && (
@@ -300,7 +293,7 @@ export const SummaryPage: React.FC = () => {
           </div>
 
           {/* Column 2: Financial Breakdown and Desktop Action (lg:col-span-5) */}
-          <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
+          <div className="order-1 lg:order-2 lg:col-span-5 lg:sticky lg:top-24 space-y-4">
             <div className="card p-4 sm:p-6 shadow-sm border border-gray-100">
               <h2 className="text-sm font-bold text-gray-900 pb-3 mb-3 border-b border-gray-100">
                 Resumen de Pago
@@ -391,7 +384,7 @@ export const SummaryPage: React.FC = () => {
                 <span>{tokenizing ? 'Validando tarjeta...' : 'Procesando...'}</span>
               </>
             ) : (
-              <span>Confirmar y Pagar • {formatCOP(currentOrder.totalAmount)}</span>
+              <span>Confirmar pago {formatCOP(currentOrder.totalAmount)}</span>
             )}
           </button>
         </div>

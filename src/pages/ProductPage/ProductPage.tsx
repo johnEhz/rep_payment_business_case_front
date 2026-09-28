@@ -5,6 +5,7 @@ import {
   fetchCategories,
   fetchBrands,
 } from '../../store/slices/catalogSlice';
+import { selectCartCount, selectCartSubtotal, openCart } from '../../store/slices/cartSlice';
 import { ProductCard } from '../../components/ProductCard';
 import { CartDrawer } from '../../components/CartDrawer';
 import { AppHeader } from '../../components/AppHeader';
@@ -25,12 +26,54 @@ export const ProductPage: React.FC = () => {
     loading,
     error,
   } = useAppSelector((s) => s.catalog);
+  const cartCount = useAppSelector(selectCartCount);
+  const cartSubtotal = useAppSelector(selectCartSubtotal);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(8);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+
+  // Animación fluida de apertura/cierre de filtros en mobile
+  const [isFilterRendered, setIsFilterRendered] = useState(false);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+
+  useEffect(() => {
+    if (isMobileFiltersOpen) {
+      setIsFilterRendered(true);
+      const raf = requestAnimationFrame(() => {
+        setIsFilterVisible(true);
+      });
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setIsFilterVisible(false);
+      const timer = setTimeout(() => {
+        setIsFilterRendered(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobileFiltersOpen]);
+
+  // Animación fluida de aparición/desaparición del botón flotante del carrito en mobile
+  const [isCartPillRendered, setIsCartPillRendered] = useState(false);
+  const [isCartPillVisible, setIsCartPillVisible] = useState(false);
+
+  useEffect(() => {
+    if (cartCount > 0) {
+      setIsCartPillRendered(true);
+      const raf = requestAnimationFrame(() => {
+        setIsCartPillVisible(true);
+      });
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setIsCartPillVisible(false);
+      const timer = setTimeout(() => {
+        setIsCartPillRendered(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
 
   // Structured sidebar filter state
   const [filters, setFilters] = useState<{
@@ -131,37 +174,64 @@ export const ProductPage: React.FC = () => {
       <CartDrawer />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 w-full pb-28 lg:pb-10">
-        {/* Mobile Search Bar (Top on Mobile, Clean & Uncluttered matching Mockup) */}
-        <div className="lg:hidden mb-3.5">
-          <div className="relative">
-            <svg
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-            >
-              <circle cx="11" cy="11" r="8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Buscar productos por nombre, marca o modelo..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs sm:text-sm text-gray-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
-                aria-label="Limpiar búsqueda"
+        {/* Mobile Search & Filter Action Bar (matching reference media_1790575840096.png) */}
+        <div className="lg:hidden mb-4">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <svg
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
               >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
+                <circle cx="11" cy="11" r="8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <input
+                type="text"
+                placeholder="¿Qué estás buscando?..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs sm:text-sm text-gray-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                  aria-label="Limpiar búsqueda"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* Filter Toggle Button next to Search */}
+            <button
+              type="button"
+              onClick={() => setIsMobileFiltersOpen(true)}
+              className="w-10 h-10 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 shrink-0 shadow-2xs relative cursor-pointer"
+              aria-label="Abrir filtros"
+            >
+              <svg className="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
+                <line x1="1" y1="14" x2="7" y2="14" />
+                <line x1="9" y1="8" x2="15" y2="8" />
+                <line x1="17" y1="16" x2="23" y2="16" />
+              </svg>
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Active Filter Chips on Mobile */}
@@ -169,12 +239,12 @@ export const ProductPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
               <span className="text-[11px] text-gray-400 font-medium mr-0.5">Filtros:</span>
               {filters.category && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[11px] font-medium rounded-lg border border-emerald-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-primary-50 text-primary-800 text-[11px] font-medium rounded-lg border border-primary-200">
                   {filters.category}
                   <button
                     type="button"
                     onClick={() => handleFilterChange({ category: null })}
-                    className="p-0.5 hover:text-emerald-950"
+                    className="p-0.5 hover:text-primary-950"
                   >
                     <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -183,7 +253,7 @@ export const ProductPage: React.FC = () => {
                 </span>
               )}
               {filters.brand && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-medium rounded-lg border border-blue-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-medium rounded-lg border border-blue-200">
                   {filters.brand}
                   <button
                     type="button"
@@ -197,12 +267,12 @@ export const ProductPage: React.FC = () => {
                 </span>
               )}
               {filters.inStockOnly && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg border border-green-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gray-100 text-gray-700 text-[11px] font-medium rounded-lg border border-gray-200">
                   En stock
                   <button
                     type="button"
                     onClick={() => handleFilterChange({ inStockOnly: false })}
-                    className="p-0.5 hover:text-green-900"
+                    className="p-0.5 hover:text-gray-900"
                   >
                     <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -221,126 +291,20 @@ export const ProductPage: React.FC = () => {
           )}
         </div>
 
-        {/* Promotional Discount & Featured Deals Banner */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white mb-5 shadow-sm relative overflow-hidden border border-indigo-900/40">
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="max-w-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-white/15 text-indigo-200 px-2.5 py-0.5 rounded-full backdrop-blur-xs">
-                  Ofertas Destacadas
-                </span>
-                <span className="text-[11px] font-medium text-indigo-300">
-                  Valle de Aburrá y Medellín
-                </span>
-              </div>
-
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white mb-2 leading-tight">
-                Clearance Sales
-              </h1>
-
-              <div className="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold mb-3">
-                <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-black">
-                  %
-                </span>
-                <span>Hasta 30% de descuento en tecnología seleccionada</span>
-              </div>
-
-              <p className="text-indigo-200/80 text-xs sm:text-sm leading-relaxed max-w-lg mb-3">
-                Productos originales con disponibilidad inmediata y pago seguro.
-              </p>
-
-              {/* 3 Core Trust Pillars */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-white/10 text-xs">
-                <div className="flex items-center gap-2 text-indigo-100">
-                  <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-bold text-white leading-tight">15 Minutos</p>
-                    <p className="text-[10px] text-indigo-300 leading-tight">Reserva garantizada</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-indigo-100">
-                  <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-bold text-white leading-tight">Entrega Local</p>
-                    <p className="text-[10px] text-indigo-300 leading-tight">Tarifa en tiempo real</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-indigo-100">
-                  <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-bold text-white leading-tight">Pago Seguro</p>
-                    <p className="text-[10px] text-indigo-300 leading-tight">Cifrado de extremo a extremo</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Showcase Visual Element matching mockup 2 */}
-            <div className="hidden md:flex items-center justify-center shrink-0 pr-4">
-              <div className="relative">
-                <div className="w-44 h-44 rounded-3xl bg-white/10 backdrop-blur-md p-3 flex items-center justify-center shadow-lg border border-white/20">
-                  <img
-                    src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=350&q=80"
-                    alt="Dispositivos destacados con descuento"
-                    className="w-full h-full object-contain filter drop-shadow-xl hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                </div>
-                <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-[10px] font-black px-2.5 py-1 rounded-full shadow-md uppercase tracking-wider">
-                  Top Deal
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Decorative ambient flare */}
-          <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-64 h-64 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
-        </div>
-
-        {/* Categories Horizontal Carousel Bar (Mockup 2 Design) */}
+        {/* Categories Horizontal Carousel Bar (matching reference media_1790575840096.png) */}
         {categories.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2.5">
-              <h2 className="text-xs sm:text-sm font-bold text-gray-900 tracking-tight">Categorías</h2>
-              {filters.category && (
-                <button
-                  type="button"
-                  onClick={() => handleFilterChange({ category: null })}
-                  className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer"
-                >
-                  Ver todas
-                </button>
-              )}
-            </div>
+          <div className="mb-5 sm:mb-6">
             <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
               <button
                 type="button"
                 onClick={() => handleFilterChange({ category: null })}
-                className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   filters.category === null
-                    ? 'bg-emerald-600 text-white shadow-xs'
+                    ? 'bg-primary-600 text-white shadow-xs'
                     : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
                 }`}
               >
-                Todas
+                Todos los productos
               </button>
               {categories.map((cat) => {
                 const isSelected = filters.category === cat.name;
@@ -349,9 +313,9 @@ export const ProductPage: React.FC = () => {
                     key={cat.id}
                     type="button"
                     onClick={() => handleFilterChange({ category: isSelected ? null : cat.name })}
-                    className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-emerald-600 text-white shadow-xs'
+                        ? 'bg-primary-600 text-white shadow-xs'
                         : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -668,66 +632,64 @@ export const ProductPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Anchored Bottom Bar on Mobile: Filters & Pagination Only */}
-      <div className="lg:hidden fixed bottom-3.5 inset-x-4 z-40 max-w-sm mx-auto">
-        <div className="bg-white/95 backdrop-blur-md border border-gray-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.14)] rounded-2xl px-3.5 py-2 flex items-center justify-between">
-          {/* Left: Filters button */}
+      {/* Floating Bottom Cart Bar on Mobile con animación fluida de entrada y salida */}
+      {isCartPillRendered && (
+        <div
+          className={`lg:hidden fixed bottom-4 inset-x-4 z-40 max-w-sm mx-auto transition-all duration-300 ease-out transform ${
+            isCartPillVisible
+              ? 'opacity-100 translate-y-0 scale-100'
+              : 'opacity-0 translate-y-6 scale-95 pointer-events-none'
+          }`}
+        >
           <button
             type="button"
-            onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
+            onClick={() => dispatch(openCart())}
+            className="w-full bg-primary-600 hover:bg-primary-700 active:scale-98 text-white rounded-2xl py-3 px-4 shadow-[0_8px_30px_rgba(37,99,235,0.35)] flex items-center justify-between text-xs sm:text-sm font-bold transition-colors cursor-pointer"
           >
-            <svg className="w-4 h-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-            </svg>
-            <span>Filtros</span>
-            {activeFiltersCount > 0 && (
-              <span className="w-4 h-4 bg-blue-600 text-white rounded-full text-[10px] font-black flex items-center justify-center">
-                {activeFiltersCount}
+            <div className="flex items-center gap-2">
+              <span>Ver tu carrito</span>
+              <span className="bg-white/20 px-2 py-0.5 rounded-full text-[11px] font-extrabold">
+                {cartCount}x
               </span>
-            )}
-          </button>
-
-          {/* Right: Quick Pagination */}
-          <div className="flex items-center gap-1 bg-gray-100/90 px-2 py-1 rounded-xl">
-            <button
-              type="button"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
-              aria-label="Página anterior"
-              className="w-6 h-6 flex items-center justify-center text-gray-700 disabled:opacity-25 disabled:cursor-not-allowed hover:bg-white rounded-lg transition-colors cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
-            <span className="text-xs font-bold text-gray-800 px-1">
-              {currentPage} / {totalPages || 1}
+            </div>
+            <span className="font-mono text-sm font-extrabold">
+              {formatCOP(cartSubtotal)}
             </span>
-            <button
-              type="button"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-              aria-label="Página siguiente"
-              className="w-6 h-6 flex items-center justify-center text-gray-700 disabled:opacity-25 disabled:cursor-not-allowed hover:bg-white rounded-lg transition-colors cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-          </div>
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* Mobile Filters Drawer Modal */}
-      {isMobileFiltersOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden lg:hidden" role="dialog" aria-modal="true">
+      {/* Mobile Filters Drawer Modal con animación de entrada y salida suave */}
+      {isFilterRendered && (
+        <div
+          className="fixed inset-0 z-50 overflow-hidden lg:hidden"
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Backdrop con fade-in / fade-out y cierre inmediato al tocar fuera */}
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+            className={`fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300 ease-in-out cursor-pointer ${
+              isFilterVisible ? 'opacity-100' : 'opacity-0'
+            }`}
             onClick={() => setIsMobileFiltersOpen(false)}
+            aria-hidden="true"
           />
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-xs bg-white h-full overflow-y-auto shadow-2xl">
+
+          {/* Drawer container con slide-in / slide-out desde la derecha y cierre si se clickea fuera */}
+          <div
+            className="fixed inset-y-0 right-0 max-w-full flex pl-10 pointer-events-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsMobileFiltersOpen(false);
+              }
+            }}
+          >
+            <div
+              className={`w-screen max-w-xs bg-white h-full shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${
+                isFilterVisible ? 'translate-x-0' : 'translate-x-full'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
               <ProductFiltersSidebar
                 categories={categories}
                 brands={brands}
@@ -736,7 +698,7 @@ export const ProductPage: React.FC = () => {
                 onClearAll={handleClearAllFilters}
                 isMobileModal={true}
                 onCloseMobile={() => setIsMobileFiltersOpen(false)}
-                className="rounded-none border-none p-5 shadow-none"
+                className="h-full border-none shadow-none"
               />
             </div>
           </div>

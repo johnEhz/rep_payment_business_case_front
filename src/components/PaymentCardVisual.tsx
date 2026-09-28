@@ -55,12 +55,12 @@ export const PaymentCardVisual: React.FC<PaymentCardVisualProps> = ({
     <div className={`w-full flex justify-center ${className}`}>
       {/* Physical ISO/IEC 7810 ID-1 standard credit card proportions (1.586 : 1) */}
       <div
-        className={`relative w-full ${maxWidthClass} aspect-[1.586/1] rounded-2xl text-white p-4 xs:p-5 shadow-2xl flex flex-col justify-between overflow-hidden border border-white/[0.08] transition-all duration-500 shrink-0 ${
+        className={`relative w-full ${maxWidthClass} aspect-[1.586/1] rounded-2xl text-white p-4 xs:p-5 flex flex-col justify-between overflow-hidden border border-gray-800 transition-all duration-500 shrink-0 ${
           brand === 'mastercard'
-            ? 'bg-gradient-to-br from-[#1d2027] via-[#171a21] to-[#12141a] shadow-black/40'
+            ? 'bg-gradient-to-br from-[#1d2027] via-[#171a21] to-[#12141a]'
             : brand === 'visa'
-            ? 'bg-gradient-to-br from-[#1a1f2b] via-[#141824] to-[#0f121a] shadow-black/40'
-            : 'bg-gradient-to-br from-[#1d2027] via-[#171a21] to-[#12141a] shadow-black/40'
+            ? 'bg-gradient-to-br from-[#1a1f2b] via-[#141824] to-[#0f121a]'
+            : 'bg-gradient-to-br from-[#1d2027] via-[#171a21] to-[#12141a]'
         }`}
       >
         {/* Subtle curved wireframe background lines from reference design */}

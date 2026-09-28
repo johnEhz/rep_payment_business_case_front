@@ -61,6 +61,7 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isOutOfBounds, setIsOutOfBounds] = useState(false);
+  const [showLocationTooltip, setShowLocationTooltip] = useState(false);
 
   const defaultLat = initialCoords?.latitude || 6.2768;
   const defaultLng = initialCoords?.longitude || -75.5843;
@@ -385,57 +386,58 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
       <div className="bg-white rounded-none sm:rounded-3xl shadow-2xl w-full h-[100dvh] sm:h-auto max-w-3xl overflow-hidden flex flex-col sm:max-h-[94vh] animate-in fade-in duration-200">
-        {/* Header */}
-        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
-                Selecciona tu ubicación en el mapa
-              </h2>
-              <p className="text-[11px] sm:text-xs text-gray-500">
-                Arrastra el marcador azul o haz clic en el mapa (Área Metropolitana de Medellín)
-              </p>
+        {/* Header - Compact & non-invasive */}
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm sm:text-base font-bold text-gray-900 leading-tight">
+              Selecciona tu ubicación
+            </h2>
+            <div className="relative inline-flex items-center">
+              <button
+                type="button"
+                onClick={() => setShowLocationTooltip((prev) => !prev)}
+                onMouseEnter={() => setShowLocationTooltip(true)}
+                onMouseLeave={() => setShowLocationTooltip(false)}
+                className="w-4 h-4 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 text-[10px] font-bold flex items-center justify-center transition-colors cursor-pointer"
+                title="Información"
+                aria-label="Información de cobertura"
+              >
+                ?
+              </button>
+              {showLocationTooltip && (
+                <div className="absolute left-0 top-full mt-2 z-50 w-64 p-2.5 bg-gray-900 text-white text-[11px] leading-relaxed rounded-xl shadow-xl pointer-events-none animate-in fade-in duration-150">
+                  <div className="absolute -top-1 left-2 w-2 h-2 bg-gray-900 rotate-45" />
+                  <span>Haz clic o arrastra el marcador para fijar tu dirección de entrega en el Valle de Aburrá.</span>
+                </div>
+              )}
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+            className="w-7 h-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 text-sm transition-colors"
+            aria-label="Cerrar modal"
           >
             ✕
           </button>
         </div>
 
-        {/* Search Bar & Quick GPS action */}
-        <div className="px-4 py-3 bg-gray-50/80 border-b border-gray-100 relative shrink-0">
+        {/* Search Bar & Quick GPS action - Slim */}
+        <div className="px-3.5 py-2 bg-gray-50 border-b border-gray-100 relative shrink-0">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar barrio, dirección o lugar en Medellín o Valle de Aburrá..."
-                className="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm pl-9 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="Buscar barrio o dirección en Medellín..."
+                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
-              <svg
-                className="w-4 h-4 text-gray-400 absolute left-3 top-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
 
               {isSearching && (
-                <div className="absolute right-3 top-3">
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <div className="absolute right-2.5 top-2">
+                  <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
 
@@ -447,7 +449,7 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
                       key={feature.id}
                       type="button"
                       onClick={() => handleSelectSearchResult(feature)}
-                      className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/70 transition-colors text-xs text-gray-700 flex items-start gap-2.5"
+                      className="w-full text-left px-3.5 py-2 hover:bg-blue-50/70 transition-colors text-xs text-gray-700 flex items-start gap-2"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
                       <span className="flex-1 truncate">{feature.place_name}</span>
@@ -461,12 +463,9 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
               type="button"
               onClick={handleUseCurrentLocation}
               title="Detectar mi ubicación actual con GPS"
-              className="px-3 sm:px-4 py-2 bg-white border border-gray-300 hover:bg-blue-50 hover:border-blue-300 text-gray-700 hover:text-blue-700 font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-colors shrink-0 shadow-2xs"
+              className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg text-xs transition-colors shrink-0"
             >
-              <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="hidden sm:inline">Mi ubicación</span>
+              GPS
             </button>
           </div>
         </div>
@@ -475,67 +474,39 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
         <div className="w-full flex-1 relative bg-gray-100 min-h-[260px] sm:min-h-[420px]">
           <div ref={mapContainerRef} className="w-full h-full" />
 
-          {/* Draggable hint badge */}
-          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs border border-gray-200 px-2.5 py-1 rounded-lg shadow-sm pointer-events-none text-[11px] font-medium text-gray-700 flex items-center gap-1.5 z-10">
-            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span>Haz clic o arrastra el marcador dentro del Valle de Aburrá</span>
-          </div>
-
           {loadingGeocode && (
-            <div className="absolute top-3 right-14 bg-white/90 backdrop-blur-xs border border-gray-200 px-3 py-1 rounded-lg shadow-sm text-xs font-semibold text-blue-700 flex items-center gap-1.5 z-10">
+            <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-xs border border-gray-200 px-2.5 py-1 rounded-lg shadow-sm text-xs font-medium text-gray-700 flex items-center gap-1.5 z-10">
               <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <span>Identificando dirección...</span>
+              <span>Buscando dirección...</span>
             </div>
           )}
         </div>
 
-        {/* Bottom Details & Confirmation Actions */}
-        <div className="p-3.5 sm:p-5 pb-6 sm:pb-5 bg-white border-t border-gray-100 shrink-0 space-y-2.5 sm:space-y-3">
+        {/* Bottom Details & Confirmation Actions - Direct, address only, no lat/long, no dir badge */}
+        <div className="p-3 sm:p-4 pb-5 sm:pb-4 bg-white border-t border-gray-100 shrink-0 space-y-2.5">
           {isOutOfBounds ? (
-            <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-3 sm:p-3.5 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-bold text-xs uppercase">
-                Aviso
-              </div>
-              <div className="flex-1 min-w-0 text-xs">
-                <span className="font-bold text-amber-950 block text-xs sm:text-sm">
-                  Ubicación fuera del Área Metropolitana de Medellín
-                </span>
-                <p className="text-amber-800 mt-0.5">
-                  Solo realizamos entregas en el Valle de Aburrá (Medellín, Bello, Envigado, Itagüí, Sabaneta, La Estrella, Caldas, Copacabana, Girardota, Barbosa).
-                </p>
-              </div>
+            <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-2.5 text-xs">
+              <span className="font-semibold block">Ubicación fuera del Valle de Aburrá</span>
+              <p className="text-amber-800 text-[11px] mt-0.5">
+                Solo realizamos entregas en Medellín y su Área Metropolitana.
+              </p>
             </div>
           ) : (
-            <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-3 sm:p-3.5 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-100/70 text-blue-700 flex items-center justify-center shrink-0 font-bold text-xs uppercase tracking-wide">
-                Dir
-              </div>
-              <div className="flex-1 min-w-0 text-xs">
-                <span className="font-bold text-gray-900 block text-xs sm:text-sm truncate">
-                  {locationDetails.address || 'Ubicación sobre el mapa'}
-                </span>
-                <p className="text-gray-500 mt-0.5 truncate">
-                  {[
-                    locationDetails.neighborhood,
-                    locationDetails.city,
-                    locationDetails.department,
-                    locationDetails.country,
-                  ]
-                    .filter(Boolean)
-                    .join(', ')}
-                </p>
-                <span className="text-[10px] text-gray-400 font-mono mt-0.5 block">
-                  Lat: {currentCoords.lat.toFixed(5)}, Lng: {currentCoords.lng.toFixed(5)}
-                </span>
-              </div>
+            <div className="bg-gray-50/80 border border-gray-100 rounded-xl px-3.5 py-2">
+              <span className="font-medium text-gray-900 text-xs sm:text-sm block truncate">
+                {locationDetails.address || 'Ubicación sobre el mapa'}
+              </span>
+              <span className="text-[11px] text-gray-500 block truncate">
+                {[locationDetails.neighborhood, locationDetails.city].filter(Boolean).join(', ')}
+              </span>
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2.5 pt-1">
+          <div className="flex items-center justify-end gap-2 pt-0.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-3.5 py-2 rounded-xl border border-gray-300 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
@@ -543,9 +514,9 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
               type="button"
               onClick={handleConfirm}
               disabled={loadingGeocode || isOutOfBounds}
-              className="btn-primary py-2.5 px-5 text-xs sm:text-sm font-bold shadow-md w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary py-2 px-4 text-xs sm:text-sm font-semibold shadow-none w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Confirmar ubicación seleccionada
+              Confirmar dirección
             </button>
           </div>
         </div>

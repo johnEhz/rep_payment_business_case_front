@@ -52,7 +52,7 @@ const App: React.FC = () => {
     <BrowserRouter>
       <AppRoutes />
       <Toaster
-        position="bottom-center"
+        position="top-center"
         duration={2500}
         theme="light"
         toastOptions={{

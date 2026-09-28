@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '../../store';
@@ -63,6 +63,36 @@ export const StatusPage: React.FC = () => {
           paymentResult?.transaction?.status === 'PENDING' ||
           order?.status === 'PAYMENT_PENDING' ||
           order?.status === 'CREATED'));
+
+  // Estado para la animación de pantalla completa que se desvanece a los 2 segundos
+  const [splashState, setSplashState] = useState<'showing' | 'fading' | 'gone'>(() => {
+    // Si todavía está pendiente de respuesta, no mostrar splash de éxito/fallo
+    return 'showing';
+  });
+  const hasAnimatedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (isPending || !order?.orderNumber) return;
+    if (hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+
+    setSplashState('showing');
+
+    // Se mantiene en pantalla completa durante ~1.8 segundos
+    const fadeTimer = setTimeout(() => {
+      setSplashState('fading');
+    }, 1800);
+
+    // A los 2.4 segundos se oculta completamente y revela el resumen suavemente
+    const doneTimer = setTimeout(() => {
+      setSplashState('gone');
+    }, 2400);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(doneTimer);
+    };
+  }, [isPending, order?.orderNumber]);
 
   // Polling cada 2.5 segundos mientras el pago esté PENDING
   useEffect(() => {
@@ -150,17 +180,27 @@ export const StatusPage: React.FC = () => {
   }, [order?.expiresAt, isSuccess]);
 
   const isOrderExpired = timeLeft <= 0;
-  const minutesLeft = Math.floor(timeLeft / 60);
-  const secondsLeft = timeLeft % 60;
-  const formattedCountdown = `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
 
   const isOrderCancelled = order?.status === 'CANCELLED' || liveStatus?.orderStatus === 'CANCELLED';
 
   useEffect(() => {
     if (isSuccess || isOrderExpired) {
       clearAllStorage();
+      dispatch(resetCheckout());
+      // Reemplazar historial para que "Atrás" no retorne a checkout ni a summary
+      window.history.replaceState(null, '', window.location.href);
     }
-  }, [isSuccess, isOrderExpired]);
+  }, [isSuccess, isOrderExpired, dispatch]);
+
+  // Si el usuario presiona el botón "Atrás" del navegador tras un pago exitoso, redirigirlo a la tienda
+  useEffect(() => {
+    if (!isSuccess) return;
+    const handlePopState = () => {
+      navigate('/', { replace: true });
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isSuccess, navigate]);
 
   const canRetry =
     !isPending &&
@@ -293,323 +333,307 @@ export const StatusPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 print:bg-white print:min-h-0">
+      {/* Animación inicial a pantalla completa que se desvanece a los 2 segundos de forma muy suave */}
+      {splashState !== 'gone' && !isPending && order && (
+        <div
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-md transition-all duration-700 ease-out pointer-events-none ${
+            splashState === 'fading'
+              ? 'opacity-0 scale-90 -translate-y-4'
+              : 'opacity-100 scale-100 translate-y-0'
+          }`}
+        >
+          <div className="relative flex flex-col items-center">
+            {isSuccess ? (
+              <div className="flex flex-col items-center">
+                <div className="px-8 py-4 rounded-2xl bg-emerald-50 border-2 border-emerald-500 shadow-xl text-emerald-800 text-2xl font-black tracking-tight animate-splash-pop">
+                  ¡Pago Exitoso!
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="absolute -inset-4 rounded-full bg-rose-100/60 animate-ping" />
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-rose-100 ring-8 ring-rose-50 text-rose-600 flex items-center justify-center shadow-xl animate-splash-pop">
+                  <svg className="w-14 h-14 sm:w-16 sm:h-16 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <p className="mt-5 text-xl sm:text-2xl font-black text-gray-900 tracking-tight animate-celebration-card">
+                  Pago No Aprobado
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Barra de navegación superior (oculta al imprimir) */}
       <div className="print:hidden">
         <AppHeader currentStep={4} />
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 py-8 print:max-w-none print:p-0 print:m-0">
+      <main
+        className={`max-w-3xl mx-auto px-4 py-8 pb-28 sm:pb-8 print:max-w-none print:p-0 print:m-0 transition-all duration-700 ease-out ${
+          splashState === 'showing'
+            ? 'opacity-0 translate-y-4'
+            : 'opacity-100 translate-y-0'
+        }`}
+      >
         {isSuccess && order && (
           <>
-            {/* Banner de éxito en pantalla con animación fluida de celebración */}
-            <div className="print:hidden flex flex-col items-center mb-8 animate-celebration-card">
-              <div className="w-20 h-20 rounded-full bg-emerald-100 ring-8 ring-emerald-50/80 flex items-center justify-center mb-4 shadow-sm animate-success-bounce">
-                <svg className="w-10 h-10 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold uppercase tracking-wider mb-2 border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            {/* Banner de éxito en pantalla */}
+            <div className="print:hidden flex flex-col items-center mb-8 animate-celebration-card text-center">
+              <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2 border border-emerald-200">
                 Transacción Aprobada
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold mb-1.5 text-center text-gray-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold mb-1.5 text-gray-900 tracking-tight">
                 ¡Pago Exitoso y Confirmado!
               </h1>
-              <p className="text-gray-600 text-center max-w-md text-xs sm:text-sm">
+              <p className="text-gray-600 max-w-md text-xs sm:text-sm">
                 Tu transacción fue autorizada exitosamente. Tu pedido ya está programado para despacho y tu comprobante oficial se encuentra listo.
               </p>
             </div>
 
-            {/* Contenedor formal de la Factura de Compra (Apta para pantalla e impresión @media print) */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-6 print:shadow-none print:border-none print:p-0 animate-celebration-card">
-              {/* Membrete Factura */}
-              <div className="border-b border-gray-200 pb-6 mb-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            {/* Contenedor del Comprobante de Pago (Apto para pantalla e impresión @media print) */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-6 print:shadow-none print:border-none print:p-0 animate-celebration-card space-y-6">
+              {/* 1. Cabecera / Orden */}
+              <div className="border-b border-gray-200 pb-5">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs uppercase tracking-wider font-bold px-2 py-1 rounded bg-blue-100 text-blue-800 print:bg-gray-100 print:text-black">
-                        Factura de Venta
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                        Pago Aprobado
                       </span>
-                      <span className="text-xs text-gray-500 font-medium">Régimen Común</span>
+                      <span className="text-xs text-gray-500 font-medium">Comprobante de Pago</span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 mt-1">
-                      Comprobante Electrónico
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
+                      Resumen de la Transacción
                     </h2>
-                    <p className="text-xs text-gray-500">
-                      Tienda Virtual S.A.S. · NIT: 901.234.567-8
-                    </p>
                   </div>
-                  <div className="sm:text-right">
-                    <div className="text-xs text-gray-500">Número de Orden</div>
-                    <div className="font-mono text-lg font-bold text-gray-900">{order.orderNumber}</div>
-                    <div className="text-xs text-gray-500 mt-1">Fecha: {formattedDate}</div>
+                  <div className="sm:text-right bg-gray-50 sm:bg-transparent p-3 sm:p-0 rounded-xl w-full sm:w-auto border sm:border-0 border-gray-100">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Número de Orden</div>
+                    <div className="font-mono text-base sm:text-lg font-bold text-gray-900">{order.orderNumber}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">Fecha: {formattedDate}</div>
                   </div>
                 </div>
               </div>
 
-              {/* Datos de Comprador, Envío y Transacción Financiera */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-gray-200 text-xs sm:text-sm">
-                {/* Datos del Comprador y Envío (Sin IDs técnicos ni íconos) */}
-                <div className="bg-gray-50 p-4 rounded-xl print:bg-white print:p-2 print:border print:border-gray-200">
-                  <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs mb-3 text-blue-700">
-                    Datos del Comprador y Envío
+              {/* 2. Resumen del Pago (en la parte superior) */}
+              <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-2xl border border-gray-200/80 p-5 print:bg-white print:border-gray-200">
+                <div className="flex items-center justify-between mb-3 border-b border-gray-200/80 pb-2.5">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800">
+                    Resumen de Pago
                   </h3>
-                  <dl className="space-y-1.5">
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Nombre:</dt>
-                      <dd className="font-medium text-gray-900">{order.customerName}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Email:</dt>
-                      <dd className="font-medium text-gray-900 break-all text-right">{order.customerEmail}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Teléfono:</dt>
-                      <dd className="font-medium text-gray-900">
-                        {order.customerPhone}
-                        {order.customerPhoneExtension ? ` ext. ${order.customerPhoneExtension}` : ''}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Dirección:</dt>
-                      <dd className="font-medium text-gray-900 text-right">
-                        {order.deliveryAddress}
-                        {order.deliveryNeighborhood ? `, B. ${order.deliveryNeighborhood}` : ''}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Ciudad / Depto:</dt>
-                      <dd className="font-medium text-gray-900 text-right">
-                        {order.deliveryCity}, {order.deliveryDepartment || 'Antioquia'}, {order.deliveryCountry || 'Colombia'}
-                      </dd>
-                    </div>
-                  </dl>
+                  <span className="text-[11px] font-semibold text-gray-500 uppercase">Moneda: {order.currency || 'COP'}</span>
                 </div>
 
-                {/* Detalles de la Transacción Financiera */}
-                <div className="bg-gray-50 p-4 rounded-xl print:bg-white print:p-2 print:border print:border-gray-200">
-                  <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs mb-3 text-blue-700">
-                    Detalles del Pago y Transacción
-                  </h3>
-                  <dl className="space-y-1.5">
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Estado de Pago:</dt>
-                      <dd className="font-bold text-xs px-2 py-0.5 rounded bg-green-100 text-green-800">
-                        APROBADO
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Estado de Entrega:</dt>
-                      <dd className="font-bold text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                        {order.status === 'DELIVERED' ? 'Entregado' : 'Confirmado'}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Referencia de Pago:</dt>
-                      <dd className="font-mono font-medium text-gray-900 text-right break-all">
-                        {tx?.reference || order.orderNumber}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Método de Pago:</dt>
-                      <dd className="font-medium text-gray-900">
-                        {tx?.paymentMethod === 'CARD' ? 'Tarjeta de Crédito / Débito' : (tx?.paymentMethod || 'Tarjeta de Crédito / Débito')}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Cuotas diferidas:</dt>
-                      <dd className="font-medium text-gray-900">
-                        {tx?.installments ? `${tx.installments} cuota(s)` : '1 cuota'}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-500">Moneda:</dt>
-                      <dd className="font-medium text-gray-900">{order.currency || 'COP'}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-
-              {/* Tabla Detallada de Artículos e Impuestos con Fotos de los Productos */}
-              <div className="mt-6 mb-6">
-                <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-3">
-                  Productos y Liquidación de Impuestos
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs sm:text-sm border-collapse">
-                    <thead>
-                      <tr className="border-b-2 border-gray-200 bg-gray-50 text-gray-700 print:bg-gray-100">
-                        <th className="py-2.5 px-3 font-semibold">Producto</th>
-                        <th className="py-2.5 px-2 text-center font-semibold">Cant.</th>
-                        <th className="py-2.5 px-2 text-right font-semibold">Base Unitaria</th>
-                        <th className="py-2.5 px-2 text-center font-semibold">IVA (%)</th>
-                        <th className="py-2.5 px-2 text-right font-semibold">IVA Monto</th>
-                        <th className="py-2.5 px-2 text-right font-semibold">Subtotal Base</th>
-                        <th className="py-2.5 px-3 text-right font-semibold">Total Ítem</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 text-gray-800">
-                      {order.items && order.items.length > 0 ? (
-                        order.items.map((item, index) => {
-                          const unitPrice = Number(item.unitPrice || 0);
-                          const quantity = Number(item.quantity || 1);
-                          const itemTotal = Number(item.totalAmount || unitPrice * quantity);
-                          
-                          const unitBase = Number(item.unitBasePrice) > 0
-                            ? Number(item.unitBasePrice)
-                            : Math.round(unitPrice / 1.19);
-                          const taxRate = item.taxRate ? (item.taxRate <= 1 ? item.taxRate * 100 : item.taxRate) : 19;
-                          const subtotalBase = Number(item.subtotal) > 0
-                            ? Number(item.subtotal)
-                            : unitBase * quantity;
-                          const taxAmount = Number(item.taxAmount) > 0
-                            ? Number(item.taxAmount)
-                            : itemTotal - subtotalBase;
-
-                          return (
-                            <tr key={item.productId || index} className="hover:bg-gray-50/50">
-                              <td className="py-3 px-3">
-                                <div className="flex items-center gap-3">
-                                  {item.imageUrl ? (
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.productName}
-                                      className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0 print:w-10 print:h-10 print:rounded"
-                                    />
-                                  ) : (
-                                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-500 font-bold text-xs print:w-10 print:h-10">
-                                      {item.productName ? item.productName.slice(0, 2).toUpperCase() : 'PR'}
-                                    </div>
-                                  )}
-                                  <div>
-                                    <div className="font-semibold text-gray-900">{item.productName}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-3 px-2 text-center font-medium">{quantity}</td>
-                              <td className="py-3 px-2 text-right font-mono">{formatCOP(unitBase)}</td>
-                              <td className="py-3 px-2 text-center">
-                                <span className="inline-block px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[11px] font-medium print:bg-transparent print:text-black">
-                                  {taxRate}%
-                                </span>
-                              </td>
-                              <td className="py-3 px-2 text-right font-mono text-gray-600">{formatCOP(taxAmount)}</td>
-                              <td className="py-3 px-2 text-right font-mono text-gray-600">{formatCOP(subtotalBase)}</td>
-                              <td className="py-3 px-3 text-right font-mono font-bold text-gray-900">
-                                {formatCOP(itemTotal)}
-                              </td>
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className="py-4 text-center text-gray-500 italic">
-                            No hay productos registrados en la orden.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Resumen Financiero y Liquidación Tributaria */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
-                {/* Notas Legales */}
-                <div className="text-xs text-gray-500 space-y-2 order-2 md:order-1">
-                  <p className="font-semibold text-gray-700 uppercase tracking-wider text-[11px]">
-                    Información Legal y Tributaria
-                  </p>
-                  <p>
-                    • Esta factura constituye soporte válido de pago y comprobante de entrega comercial.
-                  </p>
-                  <p>
-                    • Transacción procesada de manera segura con cumplimiento de los estándares internacionales PCI-DSS.
-                  </p>
-                  <p>
-                    • {order.termsAccepted ? 'Términos y condiciones aceptados por el cliente al momento de la orden.' : 'Compra sujeta a los términos y condiciones de la tienda.'}
-                  </p>
-                </div>
-
-                {/* Totales y Cálculos */}
-                <div className="space-y-2 text-xs sm:text-sm order-1 md:order-2 bg-gray-50 p-4 rounded-xl print:bg-white print:border print:border-gray-200">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal Base (Sin IVA):</span>
+                <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Subtotal productos:</span>
                     <span className="font-mono text-gray-900 font-medium">
                       {formatCOP(order.subtotalAmount)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total IVA Liquidado (19%):</span>
+
+                  <div className="flex justify-between text-gray-600">
+                    <span>IVA liquidado (19%):</span>
                     <span className="font-mono text-gray-900 font-medium">
                       {formatCOP(order.taxAmount)}
                     </span>
                   </div>
+
                   {Number(order.feeAmount) > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Tarifa Base de Servicio:</span>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Tarifa de servicio:</span>
                       <span className="font-mono text-gray-900 font-medium">
                         {formatCOP(order.feeAmount)}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Costo de Envío / Domicilio:</span>
+
+                  <div className="flex justify-between text-gray-600">
+                    <span>Costo de envío / domicilio:</span>
                     <span className="font-mono font-medium">
                       {Number(order.deliveryFeeAmount) === 0 ? (
-                        <span className="text-green-600 font-bold">Gratis</span>
+                        <span className="text-emerald-600 font-bold">Gratis</span>
                       ) : (
                         formatCOP(order.deliveryFeeAmount)
                       )}
                     </span>
                   </div>
+
                   {Number(order.discountAmount) > 0 && (
-                    <div className="flex justify-between text-green-700">
-                      <span>Descuento Aplicado:</span>
+                    <div className="flex justify-between text-emerald-700">
+                      <span>Descuento aplicado:</span>
                       <span className="font-mono font-medium">
                         -{formatCOP(order.discountAmount)}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between text-base font-extrabold pt-2 border-t border-gray-300 text-gray-900">
-                    <span>Total Facturado y Pagado:</span>
-                    <span className="text-blue-700 print:text-black font-mono">
+
+                  <div className="flex justify-between items-center text-sm sm:text-base font-extrabold pt-3 mt-1 border-t border-gray-200 text-gray-900">
+                    <span>Total Pagado:</span>
+                    <span className="text-lg sm:text-xl font-black text-blue-700 font-mono print:text-black">
                       {formatCOP(order.totalAmount)}
                     </span>
                   </div>
                 </div>
               </div>
+
+              {/* 3. Productos */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 mb-3">
+                  Productos Adquiridos ({order.items?.length || 0})
+                </h3>
+
+                <div className="divide-y divide-gray-100 border border-gray-200 rounded-xl overflow-hidden bg-white">
+                  {order.items && order.items.length > 0 ? (
+                    order.items.map((item, index) => {
+                      const unitPrice = Number(item.unitPrice || 0);
+                      const quantity = Number(item.quantity || 1);
+                      const itemTotal = Number(item.totalAmount || unitPrice * quantity);
+
+                      return (
+                        <div key={item.productId || index} className="p-3 sm:p-4 flex items-center justify-between gap-3 hover:bg-gray-50/60 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.productName}
+                                className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-500 font-bold text-xs">
+                                {item.productName ? item.productName.slice(0, 2).toUpperCase() : 'PR'}
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-semibold text-gray-900 text-xs sm:text-sm truncate">
+                                {item.productName}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {quantity} {quantity === 1 ? 'unidad' : 'unidades'} × {formatCOP(unitPrice)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0 font-mono font-bold text-xs sm:text-sm text-gray-900">
+                            {formatCOP(itemTotal)}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="p-4 text-center text-xs text-gray-500 italic">
+                      No hay productos registrados en la orden.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 4. Método de Pago */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200/80">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 mb-3">
+                  Método de Pago
+                </h3>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+                  <div className="flex justify-between sm:flex-col gap-0.5 bg-white p-2.5 rounded-lg border border-gray-100">
+                    <dt className="text-gray-500 text-xs">Medio de Pago:</dt>
+                    <dd className="font-semibold text-gray-900">
+                      {tx?.paymentMethod === 'CARD' ? 'Tarjeta de Crédito / Débito' : (tx?.paymentMethod || 'Tarjeta de Crédito / Débito')}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between sm:flex-col gap-0.5 bg-white p-2.5 rounded-lg border border-gray-100">
+                    <dt className="text-gray-500 text-xs">Cuotas diferidas:</dt>
+                    <dd className="font-semibold text-gray-900">
+                      {tx?.installments ? `${tx.installments} cuota(s)` : '1 cuota'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between sm:flex-col gap-0.5 bg-white p-2.5 rounded-lg border border-gray-100">
+                    <dt className="text-gray-500 text-xs">Referencia de Transacción:</dt>
+                    <dd className="font-mono font-medium text-gray-900 break-all">
+                      {tx?.reference || order.orderNumber}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between sm:flex-col gap-0.5 bg-white p-2.5 rounded-lg border border-gray-100">
+                    <dt className="text-gray-500 text-xs">Estado de la Transacción:</dt>
+                    <dd className="font-bold text-emerald-700">
+                      APROBADO
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              {/* 5. Dirección y Datos de Entrega */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200/80">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 mb-3">
+                  Dirección y Datos de Entrega
+                </h3>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+                  <div className="flex justify-between sm:flex-col gap-0.5 bg-white p-2.5 rounded-lg border border-gray-100">
+                    <dt className="text-gray-500 text-xs">Destinatario:</dt>
+                    <dd className="font-semibold text-gray-900">{order.customerName}</dd>
+                  </div>
+                  <div className="flex justify-between sm:flex-col gap-0.5 bg-white p-2.5 rounded-lg border border-gray-100">
+                    <dt className="text-gray-500 text-xs">Teléfono de contacto:</dt>
+                    <dd className="font-semibold text-gray-900">
+                      {order.customerPhone}
+                      {order.customerPhoneExtension ? ` ext. ${order.customerPhoneExtension}` : ''}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between sm:flex-col gap-0.5 bg-white p-2.5 rounded-lg border border-gray-100">
+                    <dt className="text-gray-500 text-xs">Dirección de entrega:</dt>
+                    <dd className="font-semibold text-gray-900">
+                      {order.deliveryAddress}
+                      {order.deliveryNeighborhood ? `, ${order.deliveryNeighborhood}` : ''}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between sm:flex-col gap-0.5 bg-white p-2.5 rounded-lg border border-gray-100">
+                    <dt className="text-gray-500 text-xs">Ciudad y Ubicación:</dt>
+                    <dd className="font-semibold text-gray-900">
+                      {order.deliveryCity}, {order.deliveryDepartment || 'Antioquia'}, {order.deliveryCountry || 'Colombia'}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
             </div>
 
             {/* Aviso de correo enviado */}
             {order.customerEmail && (
-              <div className="print:hidden flex gap-2.5 bg-primary-50 border border-primary-200 rounded-xl p-3.5 w-full mb-6 items-center">
-                <svg className="w-5 h-5 text-primary-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
-                  <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
-                </svg>
+              <div className="print:hidden bg-primary-50 border border-primary-200 rounded-xl p-3.5 w-full mb-6 text-center">
                 <p className="text-xs sm:text-sm text-primary-900">
-                  Hemos enviado una copia formal de esta factura y confirmación de despacho a{' '}
+                  Hemos enviado el comprobante oficial y la confirmación de tu pedido a{' '}
                   <span className="font-bold underline">{order.customerEmail}</span>.
                 </p>
               </div>
             )}
 
-            {/* Botones de acción en pantalla (Ocultos al imprimir) */}
-            <div className="print:hidden flex flex-col sm:flex-row gap-3 w-full">
+            {/* Botones de acción en pantalla (Ocultos al imprimir en desktop) */}
+            <div className="print:hidden hidden sm:flex sm:flex-row gap-3 w-full">
               <button
                 onClick={handlePrint}
                 className="flex-1 bg-white border-2 border-primary-600 text-primary-700 hover:bg-primary-50 font-bold py-3.5 px-6 rounded-xl transition-all duration-150 flex items-center justify-center shadow-sm"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                Imprimir Factura / Comprobante
+                Imprimir Comprobante
               </button>
 
               <button
                 onClick={handleStartOver}
                 className="flex-1 btn-primary font-bold py-3.5 px-6 rounded-xl shadow-md flex items-center justify-center"
+              >
+                Seguir Comprando
+              </button>
+            </div>
+
+            {/* Barra de acción fija en mobile */}
+            <div className="print:hidden sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 shadow-lg flex gap-2">
+              <button
+                onClick={handlePrint}
+                className="px-4 py-3 bg-gray-50 border border-gray-300 text-gray-700 font-semibold text-xs rounded-xl flex items-center justify-center shrink-0 active:scale-95"
+              >
+                Imprimir
+              </button>
+              <button
+                onClick={handleStartOver}
+                className="flex-1 btn-primary font-bold py-3 px-4 rounded-xl text-sm shadow-md"
               >
                 Seguir Comprando
               </button>
@@ -697,8 +721,8 @@ export const StatusPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Botones de acción principales */}
-            <div className="w-full flex flex-col sm:flex-row gap-3">
+            {/* Botones de acción principales (Desktop) */}
+            <div className="hidden sm:flex sm:flex-row gap-3 w-full">
               <button
                 onClick={() => navigate('/')}
                 className="flex-1 btn-primary py-3.5 px-6 rounded-xl shadow-md flex items-center justify-center text-sm font-bold"
@@ -713,6 +737,22 @@ export const StatusPage: React.FC = () => {
               </button>
             </div>
 
+            {/* Barra de acción fija en mobile para estado pendiente */}
+            <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 shadow-lg flex gap-2">
+              <button
+                onClick={() => navigate('/')}
+                className="flex-1 btn-primary py-3 px-3 rounded-xl text-xs font-bold text-center"
+              >
+                Seguir Comprando
+              </button>
+              <button
+                onClick={() => navigate(`/orders/track/${order.orderNumber}?token=${order.accessToken}`)}
+                className="flex-1 bg-white border border-gray-300 text-gray-700 font-semibold py-3 px-3 rounded-xl text-xs text-center"
+              >
+                Consultar Estado
+              </button>
+            </div>
+
             <p className="text-center text-[12px] text-gray-400 mt-3">
               Si decides permanecer en esta pantalla, se actualizará automáticamente una vez recibida la confirmación.
             </p>
@@ -721,25 +761,30 @@ export const StatusPage: React.FC = () => {
 
         {!isSuccess && !isPending && order && (
           <div className="flex flex-col items-center">
-            {/* Ícono de pago fallido */}
-            <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mb-4 shadow-sm">
-              <svg className="w-10 h-10 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            {/* Ícono de pago fallido armonizado */}
+            <div className="w-20 h-20 rounded-full bg-rose-100 ring-8 ring-rose-50/80 flex items-center justify-center mb-3 shadow-sm animate-success-bounce">
+              <svg className="w-10 h-10 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
 
-            <h1 className="text-2xl font-bold mb-2 text-center text-red-600">
-              Pago Rechazado o No Aprobado
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-rose-50 text-rose-700 text-[11px] font-bold uppercase tracking-wider mb-2 border border-rose-200">
+              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+              Transacción No Aprobada
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold mb-1.5 text-center text-gray-900 tracking-tight">
+              Pago No Aprobado
             </h1>
 
-            <p className="text-gray-600 text-center max-w-md text-sm mb-6">
-              {typeof paymentResult?.message === 'string'
-                ? paymentResult.message
-                : typeof paymentResult?.message === 'object' && paymentResult?.message !== null
-                ? Object.entries(paymentResult.message)
-                    .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-                    .join('. ')
-                : 'La entidad bancaria o pasarela de pagos no pudo autorizar la transacción.'}
+            <p className="text-gray-600 text-center max-w-md text-xs sm:text-sm mb-6">
+              {(() => {
+                const msg = typeof paymentResult?.message === 'string' ? paymentResult.message : '';
+                if (!msg || msg.toLowerCase().includes('procesado') || msg.toLowerCase().includes('pendiente')) {
+                  return 'La transacción no fue autorizada por la entidad financiera. No te preocupes, tus productos siguen reservados y puedes intentar el pago con otra tarjeta.';
+                }
+                return msg;
+              })()}
             </p>
 
             {/* Tarjeta de estado de la orden y vigencia para reintento */}
@@ -763,29 +808,29 @@ export const StatusPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Estado de vigencia / Cuenta regresiva */}
+              {/* Estado de vigencia sin timer en vivo */}
               {isOrderCancelled ? (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-xs text-red-900">
-                  <div className="flex items-center gap-2 font-bold text-red-800 text-sm mb-1">
-                    <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-4 text-xs text-rose-900">
+                  <div className="flex items-center gap-2 font-bold text-rose-800 text-sm mb-1">
+                    <svg className="w-5 h-5 text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <span>Orden cancelada</span>
                   </div>
-                  <p className="leading-relaxed text-red-800">
+                  <p className="leading-relaxed text-rose-800">
                     Esta orden ha sido cancelada y el inventario ha sido liberado. Por favor inicia un nuevo proceso de compra.
                   </p>
                 </div>
               ) : !isOrderExpired ? (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 mb-4">
-                  <div className="flex items-center gap-2 text-amber-900 font-semibold text-xs sm:text-sm mb-1">
+                <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-3.5 mb-4">
+                  <div className="flex items-center gap-2 text-amber-900 font-bold text-xs sm:text-sm mb-1">
                     <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Orden reservada por {formattedCountdown} min</span>
+                    <span>Reserva de orden activa (vigencia de 15 minutos)</span>
                   </div>
                   <p className="text-xs text-amber-800 leading-relaxed">
-                    Puedes reintentar el pago con otra tarjeta antes de que venza el tiempo de reserva.
+                    Tus artículos y precios están garantizados durante 15 minutos para que completes tu transacción con tranquilidad. Puedes reintentar el pago con otra tarjeta.
                   </p>
                 </div>
               ) : (
@@ -837,8 +882,8 @@ export const StatusPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Botones de acción para reintento */}
-            <div className="w-full space-y-3">
+            {/* Botones de acción para reintento (Desktop) */}
+            <div className="hidden sm:block w-full space-y-3">
               {!isOrderExpired && !isOrderCancelled && canRetry && (
                 <button
                   onClick={() => setIsRetryModalOpen(true)}
@@ -861,6 +906,27 @@ export const StatusPage: React.FC = () => {
               >
                 {isOrderCancelled ? 'Iniciar un Nuevo Pedido' : 'Volver a la Tienda'}
               </button>
+            </div>
+
+            {/* Barra de acción fija en mobile para reintento */}
+            <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 shadow-lg flex gap-2">
+              <button
+                onClick={handleStartOver}
+                className="flex-1 bg-white border border-gray-300 text-gray-700 font-semibold py-3 px-3 rounded-xl text-xs text-center active:scale-95"
+              >
+                {isOrderCancelled ? 'Nuevo Pedido' : 'Volver a la Tienda'}
+              </button>
+              {!isOrderExpired && !isOrderCancelled && canRetry && (
+                <button
+                  onClick={() => setIsRetryModalOpen(true)}
+                  className="flex-1 btn-primary font-bold py-3 px-3 rounded-xl text-xs text-center flex items-center justify-center gap-1.5 shadow-md active:scale-95"
+                >
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Reintentar pago
+                </button>
+              )}
             </div>
           </div>
         )}

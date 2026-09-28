@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '../store';
@@ -24,6 +24,26 @@ export const CartDrawer: React.FC = () => {
   const stockError = useAppSelector((s) => s.checkout.stockError);
   const isEmpty = items.length === 0;
 
+  // Animación fluida de entrada y salida del carrito
+  const [isRendered, setIsRendered] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsRendered(true);
+      const raf = requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setIsRendered(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   const hasOverstockedItems = items.some((i) => i.quantity > i.product.stock);
 
   const handleCheckout = () => {
@@ -35,24 +55,28 @@ export const CartDrawer: React.FC = () => {
     navigate('/checkout');
   };
 
-  // Trap focus when open
-  if (!isOpen) return null;
+  // Trap focus / mount only when active or animating
+  if (!isRendered) return null;
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop con fade in / fade out */}
       <div
-        className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+        className={`fixed inset-0 bg-black/40 z-40 backdrop-blur-xs transition-opacity duration-300 ease-in-out cursor-pointer ${
+          isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
         onClick={() => dispatch(closeCart())}
         aria-hidden="true"
       />
 
-      {/* Drawer */}
+      {/* Drawer con slide-in / slide-out suave desde la derecha */}
       <aside
         role="dialog"
         aria-label="Carrito de compras"
         aria-modal="true"
-        className="fixed right-0 top-0 h-full w-full max-w-sm bg-white z-50 flex flex-col shadow-2xl"
+        className={`fixed right-0 top-0 h-full w-full max-w-sm bg-white z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out transform ${
+          isVisible ? 'translate-x-0' : 'translate-x-full'
+        }`}
         style={{ maxWidth: '380px' }}
       >
         {/* Header */}

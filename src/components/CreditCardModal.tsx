@@ -58,6 +58,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
 
   const cardNumber = watch('cardNumber') || '';
   const cardHolder = watch('cardHolder') || '';
+  const installments = watch('installments') || 1;
   const brand: CardBrand = detectCardBrand(cardNumber);
 
   // Close on Escape
@@ -166,17 +167,21 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
 
         {/* Modal Form with Scrollable Content and Fixed Bottom Actions */}
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 overflow-hidden min-h-0">
-          {/* Scrollable form body */}
-          <div className="p-3.5 sm:p-6 pb-8 sm:pb-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4">
-            {/* Reusable Physical Payment Card Visual */}
+          {/* Fixed Pinned Card Preview Header */}
+          <div className="px-4 py-3 bg-gray-50/60 border-b border-gray-100 shrink-0 flex justify-center">
             <PaymentCardVisual
               cardNumber={cardNumber}
               cardHolder={cardHolder}
               expiryDisplay={expiryDisplay}
               brand={brand}
+              installments={installments}
               focusedField={focusedField}
+              maxWidthClass="max-w-[280px] xs:max-w-[320px] sm:max-w-[350px]"
             />
+          </div>
 
+          {/* Scrollable form body */}
+          <div className="p-3.5 sm:p-6 pb-8 sm:pb-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4">
             {/* Card Number with Live Brand Detection Logo */}
             <div>
               <div className="flex items-center justify-between mb-1">

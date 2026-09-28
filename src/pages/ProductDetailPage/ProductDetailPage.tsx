@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { fetchProductById, clearSelectedProduct } from '../../store/slices/catalogSlice';
-import { addItem, openCart, selectCartItems } from '../../store/slices/cartSlice';
+import { addItem, selectCartItems } from '../../store/slices/cartSlice';
 import { AppHeader } from '../../components/AppHeader';
 import { CartDrawer } from '../../components/CartDrawer';
 import { ProductDetailSkeleton } from '../../components/skeletons/ProductDetailSkeleton';
@@ -156,20 +156,9 @@ export const ProductDetailPage: React.FC = () => {
 
     const qtyToAdd = Math.min(quantity, availableStock);
     dispatch(addItem({ product: selectedProduct, quantity: qtyToAdd }));
-    toast.success(`¡Agregado al carrito!`, {
+    toast.success('¡Agregado al carrito!', {
       description: `${qtyToAdd}x ${selectedProduct.name}`,
     });
-    dispatch(openCart());
-  };
-
-  const handleBuyNow = () => {
-    if (availableStock <= 0) {
-      toast.warning('Producto sin stock disponible');
-      return;
-    }
-    const qtyToAdd = Math.min(quantity, availableStock);
-    dispatch(addItem({ product: selectedProduct, quantity: qtyToAdd }));
-    navigate('/checkout');
   };
 
   return (
@@ -430,11 +419,6 @@ export const ProductDetailPage: React.FC = () => {
                     >
                       {isOutOfStock ? 'Agotado' : `${selectedProduct.stock} uds`}
                     </span>
-                    {cartQty > 0 && !isOutOfStock && (
-                      <span className="text-[10px] text-primary-600 font-medium block truncate">
-                        ({cartQty} en carrito)
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -509,45 +493,30 @@ export const ProductDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Desktop Actions */}
+            {/* Desktop Action: Only Add to Cart */}
             <div className="pt-2 hidden sm:block">
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={isOutOfStock || availableStock <= 0}
-                  className="btn-secondary py-3 flex items-center justify-center gap-1.5 font-bold text-xs sm:text-sm px-2 sm:px-4 cursor-pointer"
-                >
-                  <svg className="w-4 h-4 text-gray-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span className="truncate">
-                    {isOutOfStock
-                      ? 'Agotado'
-                      : availableStock <= 0
-                      ? `En carrito (${cartQty})`
-                      : cartQty > 0
-                      ? `+ Más (${cartQty})`
-                      : 'Al carrito'}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBuyNow}
-                  disabled={isOutOfStock}
-                  className="btn-primary py-3 flex items-center justify-center gap-1.5 font-bold shadow-md shadow-primary-500/20 text-xs sm:text-sm px-2 sm:px-4 cursor-pointer"
-                >
-                  Comprar ahora
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isOutOfStock || availableStock <= 0}
+                className="btn-primary w-full py-3 flex items-center justify-center gap-2 font-bold text-sm px-6 cursor-pointer shadow-sm"
+              >
+                <span>
+                  {isOutOfStock
+                    ? 'Agotado'
+                    : availableStock <= 0
+                    ? `En carrito (${cartQty})`
+                    : 'Agregar al carrito'}
+                </span>
+              </button>
             </div>
           </div>
         </div>
       </main>
 
       {/* Fixed Sticky Action Bar for Mobile Screens */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3.5 py-2.5 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-2.5">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-2.5 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center gap-3">
           {/* Price preview */}
           <div className="shrink-0 pr-1 flex flex-col justify-center">
             <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider leading-none">Total</span>
@@ -556,30 +525,20 @@ export const ProductDetailPage: React.FC = () => {
             </span>
           </div>
 
-          {/* Add to Cart button */}
+          {/* Add to Cart button only */}
           <button
             type="button"
             onClick={handleAddToCart}
             disabled={isOutOfStock || availableStock <= 0}
-            className="btn-secondary flex-1 py-2.5 px-2 flex items-center justify-center gap-1.5 text-xs font-bold rounded-xl active:scale-95 transition-transform"
+            className="btn-primary flex-1 py-3 px-4 flex items-center justify-center gap-2 text-xs sm:text-sm font-bold rounded-xl shadow-md active:scale-95 transition-transform"
           >
-            <svg className="w-4 h-4 text-gray-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span className="truncate">{cartQty > 0 ? `+ (${cartQty})` : 'Carrito'}</span>
-          </button>
-
-          {/* Buy Now button */}
-          <button
-            type="button"
-            onClick={handleBuyNow}
-            disabled={isOutOfStock}
-            className="btn-primary flex-1 py-2.5 px-2.5 flex items-center justify-center gap-1 text-xs font-bold rounded-xl shadow-md shadow-primary-500/25 active:scale-95 transition-transform"
-          >
-            <span>Comprar</span>
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <span>
+              {isOutOfStock
+                ? 'Agotado'
+                : availableStock <= 0
+                ? `En carrito (${cartQty})`
+                : 'Agregar al carrito'}
+            </span>
           </button>
         </div>
       </div>
