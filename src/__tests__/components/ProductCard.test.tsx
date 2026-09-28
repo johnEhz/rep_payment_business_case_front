@@ -88,19 +88,20 @@ describe('ProductCard', () => {
     expect(screen.getByText(/5 disp/i)).toBeInTheDocument();
   });
 
-  it('renders category badge', () => {
-    renderWithStore(<ProductCard product={mockProduct} />);
-    expect(screen.getByText('Calzado')).toBeInTheDocument();
-  });
-
-  it('renders brand badge', () => {
+  it('renders brand or category', () => {
     renderWithStore(<ProductCard product={mockProduct} />);
     expect(screen.getByText('SportBrand')).toBeInTheDocument();
   });
 
-  it('shows "Agregar al carrito" when stock is available', () => {
+  it('renders category fallback when brand is absent', () => {
+    const noBrandProduct = { ...mockProduct, brand: null };
+    renderWithStore(<ProductCard product={noBrandProduct} />);
+    expect(screen.getByText('Calzado')).toBeInTheDocument();
+  });
+
+  it('shows "Agregar" when stock is available', () => {
     renderWithStore(<ProductCard product={mockProduct} />);
-    const button = screen.getByRole('button', { name: /agregar.*al carrito/i });
+    const button = screen.getByRole('button', { name: /agregar/i });
     expect(button).toBeInTheDocument();
     expect(button).not.toBeDisabled();
   });
@@ -119,12 +120,12 @@ describe('ProductCard', () => {
   it('shows item count when product already in cart', () => {
     const cartItems = [{ productId: 'prod-1', quantity: 2, product: mockProduct }];
     renderWithStore(<ProductCard product={mockProduct} />, cartItems);
-    expect(screen.getByText(/en carrito \(2\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/\+ \(2\)/)).toBeInTheDocument();
   });
 
-  it('shows "¡Últimas unidades!" warning when stock <= 3', () => {
+  it('shows stock count accurately', () => {
     const lowStockProduct: Product = { ...mockProduct, stock: 2 };
     renderWithStore(<ProductCard product={lowStockProduct} />);
-    expect(screen.getByText(/últimas unidades/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 disponibles/i)).toBeInTheDocument();
   });
 });

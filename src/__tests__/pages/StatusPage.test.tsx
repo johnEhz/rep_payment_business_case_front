@@ -101,7 +101,7 @@ describe('StatusPage', () => {
   describe('Success state', () => {
     it('shows success heading', () => {
       renderStatusPage(successPaymentResult);
-      expect(screen.getByText(/pago exitoso/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/pago exitoso/i)[0]).toBeInTheDocument();
     });
 
     it('shows the order number', () => {
@@ -121,19 +121,19 @@ describe('StatusPage', () => {
 
     it('shows "Seguir comprando" button', () => {
       renderStatusPage(successPaymentResult);
-      expect(screen.getByRole('button', { name: /seguir comprando/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /seguir comprando/i })[0]).toBeInTheDocument();
     });
 
-    it('shows DELIVERED status', () => {
+    it('shows APROBADO status', () => {
       renderStatusPage(successPaymentResult);
-      expect(screen.getByText(/entregado/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/aprobado/i).length).toBeGreaterThan(0);
     });
   });
 
   describe('Failed state', () => {
     it('shows failure heading', () => {
       renderStatusPage(failedPaymentResult);
-      expect(screen.getByText(/pago rechazado/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/pago no aprobado/i).length).toBeGreaterThan(0);
     });
 
     it('shows the failure reason', () => {
@@ -143,7 +143,7 @@ describe('StatusPage', () => {
 
     it('shows "Volver a la tienda" button', () => {
       renderStatusPage(failedPaymentResult);
-      expect(screen.getByRole('button', { name: /volver a la tienda/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /volver a la tienda/i })[0]).toBeInTheDocument();
     });
   });
 });

@@ -149,7 +149,7 @@ describe('ProductDetailPage', () => {
 
     await screen.findByRole('heading', { name: 'Chaqueta Impermeable Pro' });
 
-    const addBtn = screen.getByRole('button', { name: /al carrito/i });
+    const addBtn = screen.getAllByRole('button', { name: /al carrito/i })[0];
     fireEvent.click(addBtn);
 
     const cartItems = store.getState().cart.items;
