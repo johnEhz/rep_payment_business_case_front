@@ -110,6 +110,7 @@ export const CheckoutPage: React.FC = () => {
     },
   });
 
+  const watchedName = watch('name');
   const watchedCity = watch('city');
   const watchedDepartment = watch('department');
   const watchedCountry = watch('country');
@@ -899,7 +900,7 @@ export const CheckoutPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Desktop Action button: "Pay with credit card" */}
+                {/* Desktop Action button: "Pagar con tarjeta" */}
                 <div className="hidden lg:block pt-2">
                   <button
                     type="submit"
@@ -910,32 +911,15 @@ export const CheckoutPage: React.FC = () => {
                       ? 'Completa los datos de entrega'
                       : previewError
                       ? 'Ajusta las cantidades para pagar'
-                      : 'Pay with credit card'}
+                      : 'Pagar con tarjeta'}
                   </button>
-
-                  <p className="text-center text-[11px] text-gray-400 mt-2.5 leading-relaxed">
-                    {!isFormValid
-                      ? 'Diligencia correctamente todos los campos obligatorios (*) para habilitar el pago.'
-                      : previewError
-                      ? 'Ajusta las unidades en el resumen superior para continuar con el pago.'
-                      : 'Al pulsar el botón se abrirá el formulario seguro para ingresar tu tarjeta de crédito y reservar tu inventario.'}
-                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Mobile Full-Width Fixed Bottom Bar for Action */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 z-40 shadow-2xl">
-            {previewError ? (
-              <p className="text-center text-xs font-medium text-amber-700 mb-1.5 truncate">
-                {previewError}
-              </p>
-            ) : !isFormValid ? (
-              <p className="text-center text-xs text-amber-600 mb-1.5 truncate font-medium">
-                Completa los datos de entrega para habilitar el pago
-              </p>
-            ) : null}
+          {/* Mobile Full-Width Fixed Bottom Bar for Action - ONLY button */}
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 pb-5 z-40 shadow-2xl">
             <button
               type="submit"
               disabled={isButtonDisabled}
@@ -945,7 +929,7 @@ export const CheckoutPage: React.FC = () => {
                 ? 'Completa los datos de entrega'
                 : previewError
                 ? 'Ajusta las cantidades para pagar'
-                : 'Pay with credit card'}
+                : 'Pagar con tarjeta'}
             </button>
           </div>
         </form>
@@ -957,6 +941,7 @@ export const CheckoutPage: React.FC = () => {
           onSubmit={handleCompleteOrderWithCard}
           isSubmitting={creating}
           merchantPermalink={merchantData?.permalink}
+          defaultCardHolder={watchedName || validatedDeliveryData?.name || customerInfo?.name}
         />
 
         {/* Modal for Mapbox Interactive Map Location Selection */}

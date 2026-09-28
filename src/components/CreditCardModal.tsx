@@ -15,7 +15,19 @@ interface CreditCardModalProps {
   onSubmit: (cardData: CreditCardModalFormValues) => Promise<void> | void;
   isSubmitting: boolean;
   merchantPermalink?: string;
+  defaultCardHolder?: string;
 }
+
+// Normaliza el nombre del titular a formato título (Title Case)
+const normalizeName = (name?: string): string => {
+  if (!name || !name.trim()) return '';
+  return name
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   isOpen,
@@ -23,6 +35,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   onSubmit,
   isSubmitting,
   merchantPermalink,
+  defaultCardHolder = '',
 }) => {
   const {
     register,
@@ -36,7 +49,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
     mode: 'onChange',
     defaultValues: {
       cardNumber: '',
-      cardHolder: '',
+      cardHolder: defaultCardHolder ? normalizeName(defaultCardHolder) : '',
       expMonth: '',
       expYear: '',
       cvc: '',
@@ -72,13 +85,18 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isSubmitting, onClose]);
 
-  // Reset form when modal closes
+  // Reset form and pre-fill cardHolder when modal opens/closes
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      if (defaultCardHolder && !watch('cardHolder')) {
+        setValue('cardHolder', normalizeName(defaultCardHolder), { shouldValidate: true });
+      }
+    } else {
       reset();
       setExpiryDisplay('');
+      setShowInfoTooltip(false);
     }
-  }, [isOpen, reset]);
+  }, [isOpen, defaultCardHolder, reset, setValue, watch]);
 
   if (!isOpen) return null;
 
@@ -126,65 +144,59 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
 
       {/* Modal Dialog Content - Full screen on mobile, elegant dialog on desktop */}
       <div className="relative bg-white rounded-none sm:rounded-3xl shadow-2xl max-w-lg w-full z-10 flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] overflow-hidden animate-in fade-in sm:zoom-in-95 duration-200">
-        {/* Header - Clean with (?) icon button */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 shrink-0 bg-white">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
-              Tarjeta de crédito
-            </h2>
+        {/* Header - Clean with discreet floating tooltip */}
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 shrink-0 bg-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 relative">
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
+                Tarjeta de crédito
+              </h2>
 
-            {/* Non-invasive (?) security info toggle */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowInfoTooltip((prev) => !prev)}
-                className="w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 text-[11px] font-bold flex items-center justify-center transition-colors cursor-pointer"
-                title="Información de seguridad"
-                aria-label="Información de seguridad"
-              >
-                ?
-              </button>
-              {showInfoTooltip && (
-                <div className="absolute left-0 top-7 z-30 w-64 p-3 bg-white/95 backdrop-blur-md border border-gray-200/90 text-gray-600 text-xs rounded-2xl shadow-xl leading-relaxed animate-in fade-in zoom-in-95">
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="font-semibold text-gray-800 text-xs flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      </svg>
-                      Transacción protegida
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowInfoTooltip(false)}
-                      className="text-gray-400 hover:text-gray-600 p-0.5 rounded-full"
-                    >
-                      ✕
-                    </button>
+              {/* Discreet floating tooltip */}
+              <div className="relative inline-flex items-center">
+                <button
+                  type="button"
+                  onClick={() => setShowInfoTooltip((prev) => !prev)}
+                  onMouseEnter={() => setShowInfoTooltip(true)}
+                  onMouseLeave={() => setShowInfoTooltip(false)}
+                  className="w-4 h-4 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 text-[10px] font-bold flex items-center justify-center transition-colors cursor-pointer"
+                  title="Tus datos viajan protegidos con cifrado bancario SSL"
+                  aria-label="Información de seguridad"
+                >
+                  ?
+                </button>
+
+                {showInfoTooltip && (
+                  <div
+                    role="tooltip"
+                    className="absolute left-0 top-full mt-2 z-50 w-56 sm:w-64 p-2.5 bg-gray-900 text-white text-[11px] leading-relaxed rounded-xl shadow-xl pointer-events-none animate-in fade-in duration-150"
+                  >
+                    <div className="absolute -top-1 left-2 w-2 h-2 bg-gray-900 rotate-45" />
+                    <span>Tus datos son procesados directamente con cifrado bancario de 256 bits. No almacenamos tu código de seguridad.</span>
                   </div>
-                  Tus datos son procesados directamente con cifrado bancario de 256 bits. No almacenamos tu código de seguridad.
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
 
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
-            aria-label="Cerrar modal"
-          >
-            ✕
-          </button>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
+              aria-label="Cerrar modal"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Modal Form with Scrollable Content and Fixed Bottom Actions */}
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 overflow-hidden min-h-0">
           {/* Scrollable form body */}
-          <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-3.5 sm:space-y-4">
+          <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4">
             {/* Visual Ultra-Clean Apple Wallet Styled Card Preview */}
             <div
-              className={`relative h-44 sm:h-48 rounded-[24px] sm:rounded-[28px] text-white p-5 sm:p-6 shadow-xl flex flex-col justify-between overflow-hidden border transition-all duration-500 shrink-0 ${
+              className={`relative h-36 xs:h-40 sm:h-46 rounded-2xl sm:rounded-[28px] text-white p-3.5 sm:p-5 shadow-xl flex flex-col justify-between overflow-hidden border transition-all duration-500 shrink-0 ${
                 brand === 'mastercard'
                   ? 'bg-gradient-to-br from-indigo-700 via-purple-800 to-rose-900 border-purple-400/30 shadow-purple-900/30'
                   : brand === 'visa'
@@ -217,7 +229,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                     Wallet
                   </span>
                   <p className="text-base sm:text-lg font-medium text-white/95 tracking-tight truncate max-w-[240px] sm:max-w-[300px] mt-0.5">
-                    {cardHolder || 'Josh Hill'}
+                    {normalizeName(cardHolder || defaultCardHolder) || 'Titular de la tarjeta'}
                   </p>
                 </div>
 
@@ -369,7 +381,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                 autoComplete="cc-name"
                 placeholder="Nombre como aparece en la tarjeta"
                 minLength={5}
-                className={`input-field uppercase ${errors.cardHolder ? 'error' : ''}`}
+                className={`input-field capitalize placeholder:normal-case font-medium ${errors.cardHolder ? 'error' : ''}`}
                 {...register('cardHolder')}
                 onFocus={() => setFocusedField('holder')}
                 onBlur={() => setFocusedField(null)}

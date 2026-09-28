@@ -128,7 +128,7 @@ export const SummaryPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <AppHeader currentStep={3} showBack onBack={handleBack} />
 
-      <main className="flex-1 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-36 lg:pb-12">
+      <main className="flex-1 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-28 sm:pb-32 lg:pb-12">
         {/* Header title */}
         <div className="mb-5 sm:mb-6">
           <div className="flex flex-wrap items-baseline gap-2 mb-1">
@@ -167,7 +167,7 @@ export const SummaryPage: React.FC = () => {
                     products.find((p) => p.id === item.productId)?.images?.[0];
                   return (
                     <div key={item.productId} className="py-3 first:pt-0 last:pb-0 flex items-center gap-3.5">
-                      <div className="w-14 h-14 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-200/80 flex items-center justify-center">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-200/80 flex items-center justify-center">
                         {imgUrl ? (
                           <img
                             src={imgUrl}
@@ -336,13 +336,8 @@ export const SummaryPage: React.FC = () => {
               </div>
 
               {/* Integrated terms acceptance note */}
-              <div className="mt-3.5 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
-                <div className="w-3.5 h-3.5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-[11px] text-gray-500">
+              <div className="mt-3.5 pt-3 border-t border-gray-100 text-xs text-gray-400">
+                <span className="text-[11px]">
                   Términos y condiciones aceptados para esta compra
                 </span>
               </div>

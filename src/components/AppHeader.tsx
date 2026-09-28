@@ -25,38 +25,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const cartCount = useAppSelector(selectCartCount);
   const cartSubtotal = useAppSelector(selectCartSubtotal);
 
-  const [isVisible, setIsVisible] = React.useState(true);
-  const [lastScrollY, setLastScrollY] = React.useState(0);
-
-  React.useEffect(() => {
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-
-          // Always visible at the top
-          if (currentScrollY <= 15) {
-            setIsVisible(true);
-          } else if (currentScrollY > lastScrollY && currentScrollY > 70) {
-            // Scrolling down past 70px -> hide header
-            setIsVisible(false);
-          } else if (currentScrollY < lastScrollY) {
-            // Scrolling up -> show header
-            setIsVisible(true);
-          }
-
-          setLastScrollY(currentScrollY);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  const hasStepper = Boolean(currentStep && currentStep >= 2 && currentStep <= 4);
 
   const handleBack = () => {
     if (onBack) {
@@ -76,59 +45,97 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header
-      className={`sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-2xs transition-transform duration-300 ease-in-out ${
-        isVisible ? 'translate-y-0' : '-translate-y-full'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
-          <div className="flex items-center gap-3">
-            {showBack && (
-              <button
-                onClick={handleBack}
-                aria-label="Volver"
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-2xs">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        {hasStepper ? (
+          <div>
+            {/* Mobile View: Hide logo & brand name outside catalog, unify back button + stepper in 1 single compact row */}
+            <div className="sm:hidden flex items-center gap-1.5 h-13 py-1">
+              {showBack && (
+                <button
+                  onClick={handleBack}
+                  aria-label="Volver"
+                  className="w-8 h-8 shrink-0 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 transition-colors cursor-pointer"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-            )}
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              <div className="flex-1 min-w-0">
+                <StepProgress currentStep={currentStep!} />
+              </div>
+            </div>
+
+            {/* Desktop / Tablet View: Logo + Back Button in top row, Stepper cleanly placed below */}
+            <div className="hidden sm:block">
+              <div className="flex items-center justify-between h-15">
+                <div className="flex items-center gap-3">
+                  {showBack && (
+                    <button
+                      onClick={handleBack}
+                      aria-label="Volver"
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 transition-colors cursor-pointer"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  )}
+                  <button
+                    onClick={handleLogoClick}
+                    className="flex items-center gap-2 text-left group cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 to-accent-violet text-white flex items-center justify-center shadow-xs">
+                      <span className="font-black text-sm">J</span>
+                    </div>
+                    <span className="font-bold text-gray-900 text-base tracking-tight">
+                      Jhz<span className="text-primary-600">Shop</span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-w-xl mx-auto pb-2">
+                <StepProgress currentStep={currentStep!} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Catalog View (Home/Store): Full header with logo and cart trigger */
+          <div className="flex items-center justify-between h-16 sm:h-20">
             <button
               onClick={handleLogoClick}
-              className="flex items-center gap-2.5 text-left group"
+              className="flex items-center gap-2.5 text-left group cursor-pointer"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-600 to-accent-violet text-white flex items-center justify-center shadow-xs shadow-primary-500/30 group-hover:scale-105 transition-transform">
-                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" />
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                  <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" />
-                  <path d="M2 7h20" />
-                  <path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7" />
-                </svg>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-primary-600 to-accent-violet text-white flex items-center justify-center shadow-xs shadow-primary-500/30 group-hover:scale-105 transition-transform">
+                <span className="font-black text-base">J</span>
               </div>
               <div>
-                <span className="font-bold text-gray-900 text-base sm:text-lg tracking-tight block leading-tight">
+                <span className="font-bold text-gray-900 text-sm sm:text-lg tracking-tight block leading-tight">
                   Jhz<span className="text-primary-600">Shop</span>
                 </span>
               </div>
             </button>
-          </div>
 
-          {/* Right: cart button */}
-          <div className="flex items-center gap-3">
-            {(!currentStep || currentStep === 1) && (
+            {/* Cart trigger button */}
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => dispatch(toggleCart())}
                 aria-label={`Abrir carrito. ${cartCount} productos`}
-                className="relative flex items-center gap-2.5 bg-gray-50 hover:bg-primary-50 border border-gray-200 hover:border-primary-200 text-gray-800 px-3.5 py-2 rounded-2xl transition-all"
+                className="relative flex items-center gap-2.5 bg-gray-50 hover:bg-primary-50 border border-gray-200 hover:border-primary-200 text-gray-800 px-3.5 py-2 rounded-2xl transition-all cursor-pointer"
               >
                 <div className="relative">
                   <svg
@@ -151,9 +158,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   )}
                 </div>
 
-                {/* Subtotal shown on tablet & desktop */}
                 <div className="hidden sm:block text-left">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block leading-none">
+                  <span className="text-[10px] text-gray-400 font-bold block leading-none">
                     Carrito
                   </span>
                   <span className="text-xs font-bold text-gray-900 leading-none">
@@ -161,14 +167,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   </span>
                 </div>
               </button>
-            )}
-          </div>
-        </div>
-
-        {/* Step progress bar (steps 2-4) centered nicely */}
-        {currentStep && currentStep >= 2 && currentStep <= 4 && (
-          <div className="max-w-xl mx-auto pb-4 pt-1">
-            <StepProgress currentStep={currentStep} />
+            </div>
           </div>
         )}
       </div>
