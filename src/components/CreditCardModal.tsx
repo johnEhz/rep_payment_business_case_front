@@ -184,25 +184,25 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
           <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-3.5 sm:space-y-4">
             {/* Visual Ultra-Clean Apple Wallet Styled Card Preview */}
             <div
-              className={`relative h-44 sm:h-48 rounded-[24px] sm:rounded-[28px] text-white p-5 sm:p-6 shadow-2xl flex flex-col justify-between overflow-hidden border transition-all duration-500 shrink-0 ${
+              className={`relative h-44 sm:h-48 rounded-[24px] sm:rounded-[28px] text-white p-5 sm:p-6 shadow-xl flex flex-col justify-between overflow-hidden border transition-all duration-500 shrink-0 ${
                 brand === 'mastercard'
-                  ? 'bg-gradient-to-br from-[#2a2224] via-[#1d1d20] to-[#141416] border-amber-500/30 shadow-amber-950/20'
+                  ? 'bg-gradient-to-br from-indigo-700 via-purple-800 to-rose-900 border-purple-400/30 shadow-purple-900/30'
                   : brand === 'visa'
-                  ? 'bg-gradient-to-br from-[#1d2232] via-[#1b1c21] to-[#121318] border-indigo-500/30 shadow-indigo-950/20'
-                  : 'bg-gradient-to-br from-[#26272b] via-[#1b1c1e] to-[#131315] border-white/10 shadow-black/40'
+                  ? 'bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-900 border-indigo-400/30 shadow-indigo-900/30'
+                  : 'bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-950 border-indigo-400/25 shadow-indigo-950/25'
               }`}
             >
               {/* Glossy sheen overlay */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.04] via-transparent to-white/[0.08] pointer-events-none rounded-[24px] sm:rounded-[28px]" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.08] via-transparent to-white/[0.12] pointer-events-none rounded-[24px] sm:rounded-[28px]" />
 
               {/* Dynamic subtle ambient glow */}
               <div
                 className={`absolute -right-6 -top-6 w-36 h-36 rounded-full blur-3xl pointer-events-none transition-opacity duration-700 ${
                   brand === 'mastercard'
-                    ? 'bg-amber-500/15 opacity-100'
+                    ? 'bg-rose-400/25 opacity-100'
                     : brand === 'visa'
-                    ? 'bg-indigo-500/20 opacity-100'
-                    : 'bg-white/5 opacity-50'
+                    ? 'bg-indigo-300/30 opacity-100'
+                    : 'bg-indigo-400/20 opacity-70'
                 }`}
               />
 
