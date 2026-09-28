@@ -115,19 +115,19 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   const expiryErrorMessage = errors.expMonth?.message || errors.expYear?.message;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-0 sm:p-4">
       {/* Backdrop click to close */}
       <div
-        className="fixed inset-0"
+        className="fixed inset-0 hidden sm:block"
         onClick={() => {
           if (!isSubmitting) onClose();
         }}
       />
 
-      {/* Modal Dialog Content */}
-      <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-lg w-full z-10 flex flex-col max-h-[92vh] sm:max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      {/* Modal Dialog Content - Full screen on mobile, elegant dialog on desktop */}
+      <div className="relative bg-white rounded-none sm:rounded-3xl shadow-2xl max-w-lg w-full z-10 flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] overflow-hidden animate-in fade-in sm:zoom-in-95 duration-200">
         {/* Header - Clean with (?) icon button */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 shrink-0 bg-white">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 shrink-0 bg-white">
           <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
               Tarjeta de crédito
@@ -174,7 +174,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
         </div>
 
         {/* Modal Form with Scrollable Content and Fixed Bottom Actions */}
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 overflow-hidden">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 overflow-hidden min-h-0">
           {/* Scrollable form body */}
           <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-3.5 sm:space-y-4">
             {/* Visual Ultra-Clean Apple Wallet Styled Card Preview */}
@@ -485,7 +485,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
           </div>
 
           {/* Modal Actions Footer - Compact & Uncluttered */}
-          <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50/70 shrink-0 flex gap-2.5">
+          <div className="p-3.5 sm:p-4 pb-6 sm:pb-4 border-t border-gray-100 bg-gray-50/70 shrink-0 flex gap-2.5">
             <button
               type="button"
               disabled={isSubmitting}

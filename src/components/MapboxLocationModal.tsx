@@ -383,10 +383,10 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[94vh] animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+      <div className="bg-white rounded-none sm:rounded-3xl shadow-2xl w-full h-[100dvh] sm:h-auto max-w-3xl overflow-hidden flex flex-col sm:max-h-[94vh] animate-in fade-in duration-200">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -472,7 +472,7 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
         </div>
 
         {/* Mapbox Canvas Container */}
-        <div className="w-full h-[360px] sm:h-[420px] relative bg-gray-100">
+        <div className="w-full flex-1 relative bg-gray-100 min-h-[260px] sm:min-h-[420px]">
           <div ref={mapContainerRef} className="w-full h-full" />
 
           {/* Draggable hint badge */}
@@ -490,7 +490,7 @@ export const MapboxLocationModal: React.FC<MapboxLocationModalProps> = ({
         </div>
 
         {/* Bottom Details & Confirmation Actions */}
-        <div className="p-4 sm:p-5 bg-white border-t border-gray-100 shrink-0 space-y-3">
+        <div className="p-3.5 sm:p-5 pb-6 sm:pb-5 bg-white border-t border-gray-100 shrink-0 space-y-2.5 sm:space-y-3">
           {isOutOfBounds ? (
             <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-3 sm:p-3.5 flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-bold text-xs uppercase">
