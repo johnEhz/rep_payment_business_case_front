@@ -103,12 +103,22 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
     setValue('expYear', y, { shouldValidate: true, shouldDirty: true });
   };
 
-  // Format card number display for the simulated visual card
+  // Format card number display with visual PCI masking (first 4 and last 4 visible, middle 8 masked)
   const displayCardNumber = () => {
     const digits = cardNumber.replace(/\D/g, '');
     if (!digits) return '••••  ••••  ••••  ••••';
-    const padded = digits.padEnd(16, '•');
-    return `${padded.slice(0, 4)}  ${padded.slice(4, 8)}  ${padded.slice(8, 12)}  ${padded.slice(12, 16)}`;
+
+    // Group 1: Digits 1-4 (visible as typed, padded with •)
+    const g1 = digits.slice(0, 4).padEnd(4, '•');
+
+    // Group 2 & 3: Middle 8 digits (always masked visually)
+    const g2 = '••••';
+    const g3 = '••••';
+
+    // Group 4: Digits 13-16 (visible as typed once reached, otherwise ••••)
+    const g4 = digits.length > 12 ? digits.slice(12, 16).padEnd(4, '•') : '••••';
+
+    return `${g1}  ${g2}  ${g3}  ${g4}`;
   };
 
   const expiryErrorMessage = errors.expMonth?.message || errors.expYear?.message;
@@ -175,129 +185,112 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 overflow-hidden min-h-0">
           {/* Scrollable form body */}
           <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4">
-            {/* Visual Ultra-Clean Apple Wallet Styled Card Preview */}
-            <div
-              className={`relative h-36 xs:h-40 sm:h-46 rounded-2xl sm:rounded-[28px] text-white p-3.5 sm:p-5 shadow-xl flex flex-col justify-between overflow-hidden border transition-all duration-500 shrink-0 ${
-                brand === 'mastercard'
-                  ? 'bg-gradient-to-br from-indigo-700 via-purple-800 to-rose-900 border-purple-400/30 shadow-purple-900/30'
-                  : brand === 'visa'
-                  ? 'bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-900 border-indigo-400/30 shadow-indigo-900/30'
-                  : 'bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-950 border-indigo-400/25 shadow-indigo-950/25'
-              }`}
-            >
-              {/* Glossy sheen overlay */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.08] via-transparent to-white/[0.12] pointer-events-none rounded-[24px] sm:rounded-[28px]" />
-
-              {/* Dynamic subtle ambient glow */}
+            {/* Visual Credit Card matching physical ISO/IEC 7810 ID-1 proportions (1.586 : 1) */}
+            <div className="w-full flex justify-center py-1">
               <div
-                className={`absolute -right-6 -top-6 w-36 h-36 rounded-full blur-3xl pointer-events-none transition-opacity duration-700 ${
+                className={`relative w-full max-w-[340px] xs:max-w-[370px] aspect-[1.586/1] rounded-2xl text-white p-4 xs:p-5 shadow-2xl flex flex-col justify-between overflow-hidden border border-white/[0.08] transition-all duration-500 shrink-0 ${
                   brand === 'mastercard'
-                    ? 'bg-rose-400/25 opacity-100'
+                    ? 'bg-gradient-to-br from-[#1d2027] via-[#171a21] to-[#12141a] shadow-black/40'
                     : brand === 'visa'
-                    ? 'bg-indigo-300/30 opacity-100'
-                    : 'bg-indigo-400/20 opacity-70'
-                }`}
-              />
-
-              {/* Top row: Realistic Metallic EMV Chip + Contactless waves on left, 'Wallet' on right */}
-              <div className="flex items-start justify-between z-10">
-                <div className="flex items-center gap-3">
-                  {/* Metallic EMV Chip with realistic circuit traces */}
-                  <div className="w-10 h-7 sm:w-11 sm:h-8 rounded-md bg-gradient-to-br from-amber-100 via-amber-300 to-yellow-600 p-[1.5px] shadow-sm border border-amber-200/60 relative overflow-hidden shrink-0">
-                    <div className="w-full h-full border border-amber-800/30 rounded-[3px] grid grid-cols-3 grid-rows-2 gap-[1px]">
-                      <div className="border-r border-b border-amber-800/30" />
-                      <div className="border-b border-amber-800/30" />
-                      <div className="border-l border-b border-amber-800/30" />
-                      <div className="border-r border-t border-amber-800/30" />
-                      <div className="border-t border-amber-800/30" />
-                      <div className="border-l border-t border-amber-800/30" />
-                    </div>
-                    {/* Metallic reflective sheen */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/35 via-transparent to-white/20 pointer-events-none" />
-                  </div>
-
-                  {/* Contactless waves symbol */}
-                  <svg
-                    className="w-4 h-4 text-white/70 rotate-90"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <path d="M8.5 16.5a5 5 0 0 1 7 0" />
-                    <path d="M6 14a8.5 8.5 0 0 1 12 0" />
-                    <path d="M3.5 11.5a12 12 0 0 1 17 0" />
-                  </svg>
-                </div>
-
-                <span className="text-[10px] sm:text-xs font-semibold text-white/60 tracking-wider">
-                  Wallet
-                </span>
-              </div>
-
-              {/* Middle row: Formatted number */}
-              <div
-                className={`py-1 z-10 transition-all duration-200 ${
-                  focusedField === 'number' ? 'scale-[1.02] transform' : ''
+                    ? 'bg-gradient-to-br from-[#1a1f2b] via-[#141824] to-[#0f121a] shadow-black/40'
+                    : 'bg-gradient-to-br from-[#1d2027] via-[#171a21] to-[#12141a] shadow-black/40'
                 }`}
               >
-                <p className="font-mono text-base xs:text-lg sm:text-xl font-bold tracking-[0.14em] sm:tracking-[0.18em] text-white drop-shadow-sm select-none">
-                  {displayCardNumber()}
-                </p>
-              </div>
+                {/* Subtle curved wireframe background lines matching reference */}
+                <svg
+                  className="absolute inset-0 w-full h-full pointer-events-none opacity-20"
+                  preserveAspectRatio="none"
+                  viewBox="0 0 380 240"
+                >
+                  <path d="M 80 240 Q 240 200 380 110" stroke="white" strokeWidth="0.75" fill="none" />
+                  <path d="M 110 240 Q 260 195 380 125" stroke="white" strokeWidth="0.75" fill="none" />
+                  <path d="M 140 240 Q 280 190 380 140" stroke="white" strokeWidth="0.75" fill="none" />
+                  <path d="M 170 240 Q 300 185 380 155" stroke="white" strokeWidth="0.75" fill="none" />
+                  <path d="M 200 240 Q 320 180 380 170" stroke="white" strokeWidth="0.75" fill="none" />
+                  <path d="M 230 240 Q 340 175 380 185" stroke="white" strokeWidth="0.75" fill="none" />
+                </svg>
 
-              {/* Bottom row: Cardholder Name (ALL UPPERCASE), Expiry, and Brand Logo */}
-              <div className="flex items-end justify-between z-10">
+                {/* Top row: Brand Logo + Metallic EMV Chip on left, 3 vertical dots on right */}
+                <div className="flex items-center justify-between z-10">
+                  <div className="flex items-center gap-2.5">
+                    {/* Brand Logo matching reference */}
+                    <div key={brand} className="flex items-center">
+                      {brand === 'mastercard' ? (
+                        <div className="flex items-center -space-x-2">
+                          <div className="w-6 h-6 xs:w-7 xs:h-7 rounded-full bg-[#EB001B] shadow-xs" />
+                          <div className="w-6 h-6 xs:w-7 xs:h-7 rounded-full bg-[#F79E1B] opacity-90 shadow-xs" />
+                        </div>
+                      ) : brand === 'visa' ? (
+                        <span className="text-xl xs:text-2xl font-black italic tracking-wider text-white drop-shadow-sm font-sans">
+                          VISA
+                        </span>
+                      ) : (
+                        <div className="flex items-center -space-x-2 opacity-60">
+                          <div className="w-6 h-6 rounded-full bg-red-500/70" />
+                          <div className="w-6 h-6 rounded-full bg-amber-500/70" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Compact Metallic EMV Chip */}
+                    <div className="w-7 h-5 xs:w-8 xs:h-6 rounded-[3px] bg-gradient-to-br from-amber-100 via-amber-300 to-yellow-600 p-[1px] shadow-sm border border-amber-200/50 relative overflow-hidden shrink-0">
+                      <div className="w-full h-full border border-amber-800/30 rounded-[2px] grid grid-cols-3 grid-rows-2 gap-[1px]">
+                        <div className="border-r border-b border-amber-800/30" />
+                        <div className="border-b border-amber-800/30" />
+                        <div className="border-l border-b border-amber-800/30" />
+                        <div className="border-r border-t border-amber-800/30" />
+                        <div className="border-t border-amber-800/30" />
+                        <div className="border-l border-t border-amber-800/30" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/30 via-transparent to-white/20 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Three vertical dots indicator matching reference */}
+                  <div className="flex flex-col gap-1 items-center justify-center p-1 opacity-40">
+                    <span className="w-1 h-1 rounded-full bg-white" />
+                    <span className="w-1 h-1 rounded-full bg-white" />
+                    <span className="w-1 h-1 rounded-full bg-white" />
+                  </div>
+                </div>
+
+                {/* Middle row: Card Number (PCI masked: first 4 and last 4 visible, middle 8 dots) */}
                 <div
-                  className={`transition-all duration-200 min-w-0 pr-2 ${
-                    focusedField === 'holder' ? 'scale-[1.02] transform' : ''
+                  className={`z-10 py-1 transition-all duration-200 ${
+                    focusedField === 'number' ? 'scale-[1.01] transform' : ''
                   }`}
                 >
-                  <span className="text-[9px] sm:text-[10px] uppercase text-white/50 tracking-wider block font-semibold">
-                    Titular
-                  </span>
-                  <p className="text-xs sm:text-sm font-semibold tracking-wider text-white/95 truncate max-w-[170px] xs:max-w-[210px] sm:max-w-[260px] uppercase font-mono">
-                    {cardHolder ? cardHolder.toUpperCase() : 'TITULAR DE LA TARJETA'}
+                  <p className="font-mono text-lg xs:text-xl font-medium tracking-[0.16em] xs:tracking-[0.18em] text-white/95 select-none drop-shadow-sm">
+                    {displayCardNumber()}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
+                {/* Bottom row: CARD HOLDER and EXPIRES exactly like reference */}
+                <div className="flex items-end justify-between z-10 pt-1">
                   <div
-                    className={`text-right transition-all duration-200 ${
-                      focusedField === 'expiry' ? 'scale-[1.02] transform' : ''
+                    className={`transition-all duration-200 min-w-0 pr-3 ${
+                      focusedField === 'holder' ? 'scale-[1.01] transform' : ''
                     }`}
                   >
-                    <span className="text-[9px] sm:text-[10px] uppercase text-white/50 tracking-wider block font-semibold">
-                      Vence
+                    <span className="text-[9px] xs:text-[10px] uppercase text-white/40 tracking-wider block font-medium">
+                      CARD HOLDER
                     </span>
-                    <p className="text-xs sm:text-sm font-semibold tracking-wider text-white/95 font-mono">
-                      {expiryDisplay || 'MM/AA'}
+                    <p className="text-xs xs:text-sm font-medium tracking-wider text-white/90 truncate max-w-[170px] xs:max-w-[210px] uppercase font-mono mt-0.5">
+                      {cardHolder ? cardHolder.toUpperCase() : 'NOMBRE DEL TITULAR'}
                     </p>
                   </div>
 
-                  {/* Right: Dynamic Brand Logo */}
-                  <div key={brand} className="animate-brand-pop flex items-center">
-                    {brand === 'mastercard' && (
-                      <div className="flex items-center -space-x-2">
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#EB001B] shadow-xs" />
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#F79E1B] opacity-90 shadow-xs" />
-                      </div>
-                    )}
-
-                    {brand === 'visa' && (
-                      <div className="flex items-center px-1">
-                        <span className="text-lg sm:text-xl font-black italic tracking-widest text-white drop-shadow-md">
-                          VISA
-                        </span>
-                      </div>
-                    )}
-
-                    {brand === 'unknown' && (
-                      <div className="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center">
-                        <span className="text-[9px] font-mono text-white/40">••</span>
-                      </div>
-                    )}
+                  <div
+                    className={`text-right transition-all duration-200 shrink-0 ${
+                      focusedField === 'expiry' ? 'scale-[1.01] transform' : ''
+                    }`}
+                  >
+                    <span className="text-[9px] xs:text-[10px] uppercase text-white/40 tracking-wider block font-medium">
+                      EXPIRES
+                    </span>
+                    <p className="text-xs xs:text-sm font-medium tracking-wider text-white/90 font-mono mt-0.5">
+                      {expiryDisplay || 'MM/AA'}
+                    </p>
                   </div>
                 </div>
               </div>
