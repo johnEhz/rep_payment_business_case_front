@@ -777,24 +777,22 @@ export const StatusPage: React.FC = () => {
                   </p>
                 </div>
               ) : !isOrderExpired ? (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                    <div className="flex items-center gap-2 text-amber-900 font-semibold text-sm">
-                      <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Tu orden está Pendiente de Pago y vigente por {formattedCountdown} min</span>
-                    </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 mb-4">
+                  <div className="flex items-center gap-2 text-amber-900 font-semibold text-xs sm:text-sm mb-1">
+                    <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Orden reservada por {formattedCountdown} min</span>
                   </div>
                   <p className="text-xs text-amber-800 leading-relaxed">
-                    El cobro fue rechazado por la pasarela, pero tu orden comercial permanece activa. Puedes reintentar el pago con otra tarjeta de crédito o débito antes de que venza el plazo.
+                    Puedes reintentar el pago con otra tarjeta antes de que venza el tiempo de reserva.
                   </p>
                 </div>
               ) : (
-                <div className="bg-gray-100 border border-gray-200 rounded-xl p-4 mb-4 text-gray-700 text-xs">
-                  <div className="font-semibold text-gray-900 text-sm mb-1">La orden ha expirado</div>
+                <div className="bg-gray-100 border border-gray-200 rounded-xl p-3.5 mb-4 text-gray-700 text-xs">
+                  <div className="font-semibold text-gray-900 text-sm mb-1">Orden expirada</div>
                   <p>
-                    El plazo de 15 minutos para completar el pago ha concluido y el inventario fue liberado. Puedes reiniciar la compra seleccionando tus productos nuevamente.
+                    El tiempo de reserva ha concluido. Puedes reiniciar tu compra desde el catálogo.
                   </p>
                 </div>
               )}

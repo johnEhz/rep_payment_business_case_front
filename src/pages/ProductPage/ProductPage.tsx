@@ -221,15 +221,15 @@ export const ProductPage: React.FC = () => {
           )}
         </div>
 
-        {/* Promotional Discount & Featured Deals Banner (Mockup 2 Design) */}
-        <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white mb-5 shadow-sm relative overflow-hidden">
+        {/* Promotional Discount & Featured Deals Banner */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white mb-5 shadow-sm relative overflow-hidden border border-indigo-900/40">
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="max-w-xl">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-xs">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-white/15 text-indigo-200 px-2.5 py-0.5 rounded-full backdrop-blur-xs">
                   Ofertas Destacadas
                 </span>
-                <span className="text-[11px] font-medium text-emerald-100">
+                <span className="text-[11px] font-medium text-indigo-300">
                   Valle de Aburrá y Medellín
                 </span>
               </div>
@@ -238,54 +238,54 @@ export const ProductPage: React.FC = () => {
                 Clearance Sales
               </h1>
 
-              <div className="inline-flex items-center gap-2 bg-white text-emerald-800 px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold shadow-xs mb-3">
-                <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black">
+              <div className="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold mb-3">
+                <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-black">
                   %
                 </span>
                 <span>Hasta 30% de descuento en tecnología seleccionada</span>
               </div>
 
-              <p className="text-emerald-50 text-xs sm:text-sm leading-relaxed max-w-lg mb-3">
-                Disponibilidad física garantizada en tiempo real. Al iniciar tu pago, aseguramos una <strong className="text-white underline decoration-emerald-300">reserva exclusiva de 15 minutos</strong> para evitar sobreventas.
+              <p className="text-indigo-200/80 text-xs sm:text-sm leading-relaxed max-w-lg mb-3">
+                Productos originales con disponibilidad inmediata y pago seguro.
               </p>
 
-              {/* 3 Core Trust Pillars (Clean SVGs, No text emojis) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-white/20 text-xs">
-                <div className="flex items-center gap-2 text-emerald-50">
-                  <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0">
+              {/* 3 Core Trust Pillars */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-white/10 text-xs">
+                <div className="flex items-center gap-2 text-indigo-100">
+                  <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-white leading-tight">15 Min de Reserva</p>
-                    <p className="text-[10px] text-emerald-200 leading-tight">Garantía sin cancelaciones</p>
+                    <p className="font-bold text-white leading-tight">15 Minutos</p>
+                    <p className="text-[10px] text-indigo-300 leading-tight">Reserva garantizada</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-emerald-50">
-                  <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0">
+                <div className="flex items-center gap-2 text-indigo-100">
+                  <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-white leading-tight">Domicilio Exacto</p>
-                    <p className="text-[10px] text-emerald-200 leading-tight">Fijación en mapa Mapbox</p>
+                    <p className="font-bold text-white leading-tight">Entrega Local</p>
+                    <p className="text-[10px] text-indigo-300 leading-tight">Tarifa en tiempo real</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-emerald-50">
-                  <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0">
+                <div className="flex items-center gap-2 text-indigo-100">
+                  <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-white leading-tight">Cobro Cifrado Seguro</p>
-                    <p className="text-[10px] text-emerald-200 leading-tight">Tokenización y soporte oficial</p>
+                    <p className="font-bold text-white leading-tight">Pago Seguro</p>
+                    <p className="text-[10px] text-indigo-300 leading-tight">Cifrado de extremo a extremo</p>
                   </div>
                 </div>
               </div>
@@ -663,12 +663,7 @@ export const ProductPage: React.FC = () => {
               </>
             )}
 
-            {/* Real-time stock guarantee footer note */}
-            {!loading && totalItems > 0 && (
-              <p className="text-xs text-gray-400 text-center mt-10">
-                El inventario mostrado refleja el stock real descontando de forma inmediata las reservas activas de compras en curso.
-              </p>
-            )}
+
           </div>
         </div>
       </main>

@@ -409,48 +409,38 @@ export const CheckoutPage: React.FC = () => {
       <main className="flex-1 max-w-6xl mx-auto px-2.5 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-32 lg:pb-12">
         <div className="mb-4 sm:mb-5">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-            Información de Entrega y Pago
+            Finalizar Compra
           </h1>
-          <p className="text-gray-500 text-xs sm:text-sm mt-1">
-            Diligencia tus datos de despacho y selecciona el método de pago con tarjeta de crédito.
-          </p>
         </div>
 
         {/* Banner de orden pendiente activa con reserva de inventario */}
         {activePendingOrder && (
-          <div className="card border-primary-200 bg-primary-50/70 p-4 sm:p-5 mb-5 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-              <div>
-                <span className="inline-block text-[11px] font-bold text-primary-800 bg-primary-100 px-2 py-0.5 rounded-md uppercase tracking-wider mb-1">
-                  Orden en curso
-                </span>
-                <h3 className="text-sm sm:text-base font-bold text-gray-900">
-                  Tienes una orden reservada (#{activePendingOrder.orderNumber})
-                </h3>
-                <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-                  Tu inventario está apartado por los próximos{' '}
-                  <span className="font-bold text-primary-700 font-mono">
-                    {Math.floor(activeOrderSeconds / 60)}:
-                    {(activeOrderSeconds % 60).toString().padStart(2, '0')} min
+          <div className="card border-primary-200 bg-primary-50/70 p-3.5 sm:p-4 mb-5 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />
+                <span className="text-xs sm:text-sm font-bold text-gray-900">
+                  Orden #{activePendingOrder.orderNumber} reservada ·{' '}
+                  <span className="text-primary-700 font-mono">
+                    {Math.floor(activeOrderSeconds / 60)}:{(activeOrderSeconds % 60).toString().padStart(2, '0')} min
                   </span>
-                  . Puedes continuar directamente con esta orden o descartarla para crear una nueva.
-                </p>
+                </span>
               </div>
 
-              <div className="flex items-center gap-2.5 shrink-0">
+              <div className="flex items-center gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={handleResumeExistingOrder}
-                  className="btn-primary py-2.5 px-4 text-xs w-auto font-bold shadow-xs whitespace-nowrap"
+                  className="btn-primary py-2 px-3.5 text-xs w-auto font-bold shadow-xs whitespace-nowrap"
                 >
-                  Continuar con esta orden
+                  Continuar orden
                 </button>
                 <button
                   type="button"
                   onClick={handleDiscardAndCreateNew}
-                  className="text-xs text-gray-500 hover:text-red-600 underline font-medium cursor-pointer whitespace-nowrap"
+                  className="text-xs text-gray-500 hover:text-red-600 font-medium cursor-pointer whitespace-nowrap"
                 >
-                  Descartar orden
+                  Descartar
                 </button>
               </div>
             </div>

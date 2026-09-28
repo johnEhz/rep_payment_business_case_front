@@ -139,9 +139,6 @@ export const SummaryPage: React.FC = () => {
               Orden {currentOrder.orderNumber}
             </span>
           </div>
-          <p className="text-gray-500 text-xs sm:text-sm">
-            Verifica el detalle final antes de procesar la transacción segura.
-          </p>
         </div>
 
         {/* 2-Column Responsive Layout */}
@@ -417,10 +414,7 @@ export const SummaryPage: React.FC = () => {
 
                 {/* Highlighted Total Box */}
                 <div className="bg-primary-50/80 border border-primary-200/80 rounded-xl p-3.5 mt-3 flex justify-between items-baseline">
-                  <div>
-                    <span className="text-xs sm:text-sm font-bold text-primary-950 block">Total a pagar</span>
-                    <span className="text-[10px] text-primary-600">Impuestos y envío incluidos</span>
-                  </div>
+                  <span className="text-sm font-bold text-primary-950">Total a pagar</span>
                   <span className="text-xl sm:text-2xl font-black text-primary-700 font-mono">
                     {formatCOP(currentOrder.totalAmount)}
                   </span>
@@ -433,16 +427,16 @@ export const SummaryPage: React.FC = () => {
                   type="button"
                   onClick={handleConfirmAndPay}
                   disabled={isProcessing || merchantLoading}
-                  className="btn-primary w-full py-4 flex items-center justify-center gap-2.5 font-bold shadow-lg shadow-primary-500/25 text-base rounded-2xl cursor-pointer hover:shadow-xl transition-all"
+                  className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 font-bold shadow-md shadow-primary-500/25 text-sm rounded-xl cursor-pointer hover:shadow-lg transition-all"
                 >
                   {isProcessing ? (
                     <>
                       <Spinner size="sm" color="text-white" />
-                      <span>{tokenizing ? 'Validando tarjeta...' : 'Procesando pago seguro...'}</span>
+                      <span>Procesando pago...</span>
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg className="w-4 h-4 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                       </svg>
@@ -451,12 +445,13 @@ export const SummaryPage: React.FC = () => {
                   )}
                 </button>
 
-                {/* Security trust badge */}
-                <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400 mt-3">
-                  <svg className="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                {/* Minimalist SSL badge */}
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400 mt-2.5">
+                  <svg className="w-3.5 h-3.5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
-                  <span>Pago seguro con encriptación de 256 bits (PCI-DSS)</span>
+                  <span>Transacción cifrada SSL</span>
                 </div>
               </div>
             </div>

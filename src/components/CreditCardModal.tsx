@@ -46,6 +46,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
   });
 
   const [expiryDisplay, setExpiryDisplay] = useState('');
+  const [showInfoTooltip, setShowInfoTooltip] = useState(false);
   const [focusedField, setFocusedField] = useState<'number' | 'holder' | 'expiry' | 'cvc' | null>(null);
 
   // Explicitly register month and year fields since they are updated via unified input
@@ -56,9 +57,6 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
 
   const cardNumber = watch('cardNumber') || '';
   const cardHolder = watch('cardHolder') || '';
-  const expMonth = watch('expMonth') || '';
-  const expYear = watch('expYear') || '';
-  const cvc = watch('cvc') || '';
   const brand: CardBrand = detectCardBrand(cardNumber);
   const cleanDigits = cardNumber.replace(/\D/g, '');
   const last4 = cleanDigits.slice(-4);
@@ -128,15 +126,40 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
 
       {/* Modal Dialog Content */}
       <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-lg w-full z-10 flex flex-col max-h-[92vh] sm:max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 shrink-0 bg-white">
-          <div>
+        {/* Header - Clean with (?) icon button */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 shrink-0 bg-white">
+          <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
-              Pay with credit card
+              Tarjeta de crédito
             </h2>
-            <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">
-              Ingresa los datos de tu tarjeta para reservar tu orden
-            </p>
+
+            {/* Non-invasive (?) security info toggle */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowInfoTooltip((prev) => !prev)}
+                className="w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 text-[11px] font-bold flex items-center justify-center transition-colors cursor-pointer"
+                title="Información de seguridad"
+                aria-label="Información de seguridad"
+              >
+                ?
+              </button>
+              {showInfoTooltip && (
+                <div className="absolute left-0 top-6.5 z-30 w-60 p-2.5 bg-gray-900/95 backdrop-blur-xs text-white text-[11px] rounded-xl shadow-xl leading-snug animate-in fade-in zoom-in-95">
+                  <div className="flex items-start justify-between gap-1 mb-1">
+                    <span className="font-bold text-gray-200">Seguridad SSL</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowInfoTooltip(false)}
+                      className="text-gray-400 hover:text-white text-xs ml-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  Tus datos son procesados directamente con cifrado de 256 bits (PCI-DSS). No almacenamos tu código de seguridad.
+                </div>
+              )}
+            </div>
           </div>
 
           <button
@@ -202,7 +225,7 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                 </div>
               </div>
 
-              {/* Bottom row: Formatted number & Expiry on left, Brand Logo + Last4 on right */}
+              {/* Bottom row: Formatted number on left, Brand Logo + Last4 on right */}
               <div className="flex items-end justify-between z-10 pt-2">
                 <div
                   className={`space-y-1 transition-all duration-200 ${
@@ -214,22 +237,10 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
                     {displayCardNumber()}
                   </p>
 
-                  {/* Account / Expiry subtitle info */}
-                  <div className="flex items-center gap-2.5 text-[11px] sm:text-xs text-white/50 font-mono">
-                    <span>
-                      Account ** {last4 || '5087'}
-                    </span>
-                    <span className="text-white/20">•</span>
-                    <span className={expMonth || expYear ? 'text-white/80 font-semibold' : ''}>
-                      {expMonth || 'MM'}/{expYear || 'AA'}
-                    </span>
-                    {cvc && (
-                      <>
-                        <span className="text-white/20">•</span>
-                        <span className="text-white/80">CVC •••</span>
-                      </>
-                    )}
-                  </div>
+                  {/* Clean Account Info matching reference */}
+                  <p className="text-[11px] sm:text-xs text-white/50 font-mono">
+                    Account ** {last4 || '5087'}
+                  </p>
                 </div>
 
                 {/* Right: Dynamic Brand Logo & Masked Digits (Exactly like photo) */}
@@ -446,26 +457,25 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
               </select>
             </div>
 
-            {/* Terms and Conditions Checkbox */}
-            <div className="pt-1">
-              <label className="flex items-start gap-2.5 cursor-pointer">
+            {/* Terms and Conditions Checkbox - Compact & Clean */}
+            <div className="pt-0.5">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-500 select-none">
                 <input
                   type="checkbox"
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                  className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                   {...register('termsAccepted')}
                 />
-                <span className="text-xs text-gray-600 leading-relaxed">
+                <span>
                   Acepto los{' '}
                   <a
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary-600 underline hover:text-primary-700 font-semibold"
+                    className="text-primary-600 underline font-medium hover:text-primary-700"
                     onClick={(e) => e.stopPropagation()}
                   >
                     términos y condiciones
-                  </a>{' '}
-                  para realizar mi compra.
+                  </a>
                 </span>
               </label>
               {errors.termsAccepted && (
@@ -474,13 +484,13 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
             </div>
           </div>
 
-          {/* Modal Actions Footer (Pinned at bottom, never cut off on mobile) */}
-          <div className="p-3.5 sm:p-5 border-t border-gray-100 bg-gray-50/70 shrink-0 flex gap-2.5 sm:gap-3">
+          {/* Modal Actions Footer - Compact & Uncluttered */}
+          <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50/70 shrink-0 flex gap-2.5">
             <button
               type="button"
               disabled={isSubmitting}
               onClick={onClose}
-              className="w-1/3 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl border border-gray-300 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-100 transition-colors disabled:opacity-50"
+              className="w-1/3 py-2.5 px-3 rounded-xl border border-gray-300 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -488,15 +498,15 @@ export const CreditCardModal: React.FC<CreditCardModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || !isValid}
-              className="w-2/3 btn-primary py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2"
+              className="w-2/3 btn-primary py-2.5 px-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
                   <Spinner size="sm" />
-                  <span>Creando tu orden...</span>
+                  <span>Procesando...</span>
                 </>
               ) : (
-                <span>Continuar al Resumen</span>
+                <span>Continuar</span>
               )}
             </button>
           </div>
